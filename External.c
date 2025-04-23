@@ -2115,6 +2115,7 @@ void PWMoff(int slice){
     pwm_set_enabled(slice, false);
 }
 #ifndef PICOMITEVGA
+#ifndef PICOCALC
 void setBacklight(int level, int setfrequency){
     if(((Option.DISPLAY_TYPE>I2C_PANEL && Option.DISPLAY_TYPE<BufferedPanel ) || (Option.DISPLAY_TYPE>=SSDPANEL && Option.DISPLAY_TYPE<VIRTUAL)) && Option.DISPLAY_BL){
         MMFLOAT frequency=setfrequency ? (MMFLOAT)setfrequency : (Option.DISPLAY_TYPE==ILI9488W ? 1000.0 : 50000.0);
@@ -2143,6 +2144,13 @@ void setBacklight(int level, int setfrequency){
         spi_write_command(0x81);//SETCONTRAST
         spi_write_command((uint8_t)level);
     } 
+#else
+void setBacklight(int level){//STM32: i2c reg is REG_ID_BKL(0x05)
+    //level is 0-100%
+    level*=255;
+    level/=100;
+    I2C_Send_RegData(0x1f,0x05,(uint8_t)level);
+#endif
 }
 /*  @endcond */
 void MIPS16 cmd_backlight(void){
@@ -2162,7 +2170,11 @@ void MIPS16 cmd_backlight(void){
             frequency=getint(argv[2],100,100000);
         }
     }
+#ifndef PICOCALC
     setBacklight(level, frequency);
+#else
+    setBacklight(level);
+#endif
 }
 #endif
 void MIPS16 cmd_Servo(void){

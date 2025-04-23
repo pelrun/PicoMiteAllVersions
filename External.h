@@ -210,7 +210,11 @@ extern void SoftReset(void);
 extern volatile uint64_t IRoffset;
 extern int BacklightSlice,BacklightChannel;
 extern void SetADCFreq(float frequency);
+#ifndef PICOCALC
 extern void setBacklight(int level, int frequency);
+#else
+extern void setBacklight(int level);
+#endif
 #ifdef rp2350
 extern const uint8_t PINMAP[48];
 #else

@@ -1,7 +1,15 @@
 cmake_minimum_required(VERSION 3.13)
 # Valid builds are PICO, PICOUSB, VGA, VGAUSB, HDMI(rp2350 only), HDMIUSB(rp2350 only), WEB
 
-set(COMPILE HDMIUSB)
+set(PICOCALC true)
+#set(SDBOOT true)
+
+# Compile for PICO 1 Board
+#set(COMPILE PICO)
+
+# Compile for PICO 2 Board
+#set(COMPILE PICORP2350)
+set(COMPILE WEBRP2350)
 
 if (COMPILE STREQUAL "HDMI" OR COMPILE STREQUAL "WEBRP2350" OR COMPILE STREQUAL "HDMIUSB"  OR COMPILE STREQUAL "VGARP2350"  OR COMPILE STREQUAL "VGAUSBRP2350"  OR COMPILE STREQUAL "PICORP2350"  OR COMPILE STREQUAL "PICOUSBRP2350" )
 	set(PICO_PLATFORM rp2350)
@@ -64,6 +72,7 @@ if (COMPILE STREQUAL "WEB" OR COMPILE STREQUAL "WEBRP2350" )
     target_sources(PicoMite PRIVATE 
 	SSD1963.c 
 	Touch.c     
+	GUI.c
 	cJSON.c
     mqtt.c
     MMMqtt.c
@@ -167,9 +176,9 @@ endif()
 # all PicoMite variants - enable the gui
 if (COMPILE STREQUAL "PICO" OR COMPILE STREQUAL "PICOUSB" OR COMPILE STREQUAL "PICORP2350" OR COMPILE STREQUAL "PICOUSBRP2350")
 target_compile_options(PicoMite PRIVATE -DPICOMITE
-										-DPICO_HEAP_SIZE=0x2000 
+										-DPICO_HEAP_SIZE=0x1000 
 										-DGUICONTROLS
-										-DPICO_CORE0_STACK_SIZE=0x2000
+										-DPICO_CORE0_STACK_SIZE=0x1000
 										)
 endif()
 # all VGA variants 
@@ -191,6 +200,7 @@ endif()
 if(COMPILE STREQUAL "WEB" OR COMPILE STREQUAL "WEBRP2350")
 	target_compile_options(PicoMite PRIVATE -DPICOMITEWEB 
 											-DPICO_HEAP_SIZE=0x4000 
+											-DGUICONTROLS
 											-DCYW43_HOST_NAME="WebMite" 
 											-DPICO_CYW43_ARCH_POLL
 											-DPICO_CORE0_STACK_SIZE=0x4000
@@ -204,6 +214,11 @@ endif()
 #special case WEB RP2350 gets the GUI controls
 if(COMPILE STREQUAL "WEBRP2350")
 	target_compile_options(PicoMite PRIVATE -DGUICONTROLS
+											)
+endif()
+#set the PICOCALC flag
+if(PICOCALC STREQUAL "true")
+	target_compile_options(PicoMite PRIVATE -DPICOCALC
 											)
 endif()
 
@@ -245,4 +260,8 @@ if(COMPILE STREQUAL "WEB" OR COMPILE STREQUAL "WEBRP2350" )
 	target_link_libraries(PicoMite
 	pico_cyw43_arch_lwip_poll
 	)
+endif()
+
+if(SDBOOT STREQUAL "true")
+	pico_set_linker_script(PicoMite ${CMAKE_SOURCE_DIR}/memmap_sdcard_app.ld)
 endif()

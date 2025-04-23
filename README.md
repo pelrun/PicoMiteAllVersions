@@ -1,3 +1,56 @@
+#PicoCalc
+
+INSTALL PICO SDK
+----------------
+```bash
+sudo apt update && sudo apt install -y cmake gcc-arm-none-eabi libnewlib-arm-none-eabi build-essential git
+
+mkdir -p ~/pico && cd ~/pico
+git clone https://github.com/raspberrypi/pico-sdk.git
+cd pico-sdk
+git checkout tags/2.1.1 -b sdk2.1.1
+git submodule update --init
+
+echo 'export PICO_SDK_PATH=~/pico/pico-sdk' >> ~/.bashrc
+source ~/.bashrc
+```
+
+SETUP PICOCALC FIRMWARE
+-----------------------
+```bash
+mkdir -p ~/picocalc && cd ~/picocalc
+git clone https://github.com/madcock/PicoMiteAllVersions.git
+cd PicoMiteAllVersions
+mv ~/pico/pico-sdk/src/rp2_common/hardware_flash/flash.c ~/pico/pico-sdk/src/rp2_common/hardware_flash/flash.bak
+ln -s ~/picocalc/PicoMiteAllVersions/flash.c ~/pico/pico-sdk/src/rp2_common/hardware_flash/flash.c
+mv ~/pico/pico-sdk/src/rp2_common/hardware_gpio/gpio.c ~/pico/pico-sdk/src/rp2_common/hardware_gpio/gpio.bak
+ln -s ~/picocalc/PicoMiteAllVersions/gpio.c ~/pico/pico-sdk/src/rp2_common/hardware_gpio/gpio.c
+```
+EDIT ``~/picocalc/PicoMiteAllVersions/CMakeLists.txt`` TO CHOOSE TARGET
+-----------------------------------------------------------------------
+```makefile
+set(PICOCALC true)
+
+# Compile for PICO 1 Board
+#set(COMPILE PICO)
+
+# Compile for PICO 2 Board
+#set(COMPILE PICORP2350)
+set(COMPILE WEBRP2350)
+```
+
+BUILD PICOCALC FIRMWARE
+-----------------------
+```bash
+cd ~/picocalc/PicoMiteAllVersions
+mkdir build
+cd build
+cmake ..
+make
+```
+
+(_original readme follows..._)
+
 # PicoMiteRP2350
 This contains files to build MMbasic V6.00.02RC19 to run on both RP2040 and RP2350<br>
 Compile with GCC 13.3.1 arm-none-eabi<br>
