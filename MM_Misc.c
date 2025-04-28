@@ -3945,16 +3945,6 @@ void MIPS16 cmd_option(void) {
         return;
     }
 #else
-
-#ifdef PICOCALC
-    tp = checkstring(cmdline, (unsigned char *)"USBBOOT");
-    if(tp) {
-        if(CurrentLinePtr) error("Invalid in a program");
-        reset_usb_boot(0,0);
-        return;
-    }
-#endif
-
     tp = checkstring(cmdline, (unsigned char *)"CPUSPEED");
     if(tp) {
         uint32_t speed=0;    
