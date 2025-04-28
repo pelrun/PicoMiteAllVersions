@@ -4924,6 +4924,8 @@ void LoadOptions(void)
 
     Option.BGR = 1;
     Option.BackLightLevel = 20; //default 20,sync with i2c keyboard
+    Option.ColourCode = 1;
+    strcpy((char *)Option.platform,"PicoCalc");
 #endif
 }
 

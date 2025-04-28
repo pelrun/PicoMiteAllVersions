@@ -2452,6 +2452,9 @@ void MIPS16 configure(unsigned char *p){
 #if defined(PICOMITE) || defined(PICOMITEWEB)
 #ifndef USBKEYBOARD
             MMPrintString("Game*Mite\r\n");
+#ifdef PICOCALC
+            MMPrintString("PicoCalc\r\n");
+#endif
             MMPrintString("Pico-ResTouch-LCD-3.5\r\n");
             MMPrintString("Pico-ResTouch-LCD-2.8\r\n");
             MMPrintString("PICO BACKPACK\r\n");
@@ -2828,6 +2831,56 @@ OPTION MODBUFF ENABLE 192 */
             _excep_code = RESET_COMMAND;
             SoftReset();
        }
+#ifdef PICOCALC
+       if(checkstring(p,(unsigned char *) "PICOCALC"))  {
+            ResetOptions(false);
+            //Option.CPU_Speed=252000;
+            //Option.modbuffsize=192;
+            //Option.modbuff = true;
+            Option.ColourCode = 1;
+            Option.SYSTEM_CLK = 14;
+            Option.SYSTEM_MOSI = 15;
+            Option.SYSTEM_MISO = 16;
+            Option.SYSTEM_I2C_SDA = 9;
+            Option.SYSTEM_I2C_SCL = 10;
+            Option.SYSTEM_I2C_SLOW = 1;//10khz for picocalc
+            Option.AUDIO_L = 31;
+            Option.AUDIO_R = 32;
+            Option.AUDIO_SLICE = 5;
+            Option.AUDIO_CLK_PIN = 0;
+            Option.AUDIO_MOSI_PIN = 0;
+            Option.AUDIO_DCS_PIN = 0;
+            Option.AUDIO_DREQ_PIN = 0;
+            Option.AUDIO_RESET_PIN = 0;
+            Option.DISPLAY_TYPE = ILI9488;
+            Option.DISPLAY_BL = 0; //stm32 controls the backlight
+            Option.DISPLAY_ORIENTATION = PORTRAIT;
+            Option.LCD_CD = 19;
+            Option.LCD_Reset = 20;
+            Option.LCD_CS = 17;
+            Option.BGR = 1;
+            Option.BackLightLevel = 20;//default 20,sync with i2c keyboard
+            Option.TOUCH_CS = 0;
+            Option.TOUCH_IRQ = 0;
+            Option.DefaultFC = GREEN;
+            Option.DefaultFont = 0x01;
+            Option.ColourCode = 1;
+            Option.KeyboardConfig =CONFIG_I2C;
+            Option.CombinedCS = 0;
+            Option.SD_CS = 22;
+            Option.SD_CLK_PIN = 24;
+            Option.SD_MOSI_PIN = 25;
+            Option.SD_MISO_PIN = 21;
+            Option.DISPLAY_CONSOLE = 1;
+            Option.SerialConsole = 1;
+            Option.SerialTX = 1;
+            Option.SerialRX = 2;
+            SaveOptions();
+            printoptions();uSec(100000);
+            _excep_code = RESET_COMMAND;
+            SoftReset();
+       }
+#endif
        if(checkstring(p,(unsigned char *) "PICORESTOUCHLCD3.5"))  {
             ResetOptions(false);
             Option.CPU_Speed=252000;
