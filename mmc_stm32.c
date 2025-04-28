@@ -1494,7 +1494,11 @@ void InitReservedIO(void) {
 		gpio_set_function(PinDef[Option.SYSTEM_I2C_SDA].GPno, GPIO_FUNC_I2C);
 		if(PinDef[Option.SYSTEM_I2C_SDA].mode & I2C0SDA){
 			I2C0locked=1;
+#ifdef PICOCALC
+			i2c_init(i2c0,(Option.SYSTEM_I2C_SLOW ? 10000:400000));
+#else
 			i2c_init(i2c0,(Option.SYSTEM_I2C_SLOW ? 100000:400000));
+#endif
 			gpio_pull_up(PinDef[Option.SYSTEM_I2C_SCL].GPno);
 			gpio_pull_up(PinDef[Option.SYSTEM_I2C_SDA].GPno);
 			I2C_enabled=1;
@@ -1503,7 +1507,11 @@ void InitReservedIO(void) {
 			I2C_Timeout=500;
 		} else {
 			I2C1locked=1;
+#ifdef PICOCALC
+			i2c_init(i2c1,(Option.SYSTEM_I2C_SLOW ? 10000:400000));
+#else
 			i2c_init(i2c1,(Option.SYSTEM_I2C_SLOW ? 100000:400000));
+#endif
 			gpio_pull_up(PinDef[Option.SYSTEM_I2C_SCL].GPno);
 			gpio_pull_up(PinDef[Option.SYSTEM_I2C_SDA].GPno);
 			I2C2_enabled=1;	
