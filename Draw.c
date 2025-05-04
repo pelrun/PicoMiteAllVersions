@@ -232,7 +232,9 @@ uint8_t __not_in_flash_func(RGB332)(uint32_t c){
 uint8_t __not_in_flash_func(RGB121)(uint32_t c){
     return ((c & 0x800000)>> 20) | ((c & 0xC000)>>13) | ((c & 0x80)>>7);
 }
-
+uint16_t __not_in_flash_func(RGB121pack)(uint32_t c){
+    return (RGB121(c)<<12) | (RGB121(c)<<8) | (RGB121(c)<<4) | RGB121(c);
+}
 /*  @endcond */
 
 void MIPS16 cmd_guiMX170(void) {
@@ -496,16 +498,16 @@ void DrawPixelNormal(int x, int y, int c) {
 }
 #endif
 void ClearScreen(int c) {
-    DrawRectangle(0, 0, HRes - 1, VRes - 1, c);
 #ifdef PICOMITEVGA
     if(DISPLAY_TYPE==SCREENMODE1 && WriteBuf==DisplayBuf){
+        DrawRectangle(0, 0, HRes - 1, VRes - 1, 0);
 #ifdef HDMI
         memset((void *)WriteBuf,0,ScreenSize);
         if(FullColour){
             uint16_t bcolour = RGB555(c);
             for(int x=0;x<X_TILE;x++){
                 for(int y=0;y<Y_TILE;y++){
-                    tilefcols[y*X_TILE+x]=Option.VGAFC;
+                    tilefcols[y*X_TILE+x]=RGB555(gui_fcolour);
                     tilebcols[y*X_TILE+x]=bcolour;
                 } 
             }
@@ -513,7 +515,7 @@ void ClearScreen(int c) {
            uint8_t bcolour = RGB332(c);
             for(int x=0;x<X_TILE;x++){
                 for(int y=0;y<Y_TILE;y++){
-                    tilefcols_w[y*X_TILE+x]=Option.VGAFC;
+                    tilefcols_w[y*X_TILE+x]=RGB332(gui_fcolour);
                     tilebcols_w[y*X_TILE+x]=bcolour;
                 } 
             }
@@ -521,16 +523,16 @@ void ClearScreen(int c) {
         CurrentX=CurrentY=0;
 #else
         memset((void *)WriteBuf,0,ScreenSize);
-        int bcolour = RGB121(c);
-        bcolour= (bcolour<<12) | (bcolour<<8) | (bcolour<<4) | bcolour;
         for(int x=0;x<X_TILE;x++){
             for(int y=0;y<Y_TILE;y++){
-                tilefcols[y*X_TILE+x]=Option.VGAFC;
-                tilebcols[y*X_TILE+x]=bcolour;
+                tilefcols[y*X_TILE+x]=RGB121pack(gui_fcolour);
+                tilebcols[y*X_TILE+x]=RGB121pack(c);
             } 
         }
 #endif
-    }
+    } else DrawRectangle(0, 0, HRes - 1, VRes - 1, c);
+#else
+    DrawRectangle(0, 0, HRes - 1, VRes - 1, c);
 #endif
 }
 void DrawBuffered(int xti, int yti, int c, int complete){
@@ -4053,9 +4055,9 @@ void MIPS16 loadsprite(unsigned char* p) {
                             else data = 0;
                         }
                         if(toggle){
-                            *q++ |= ((data & 0x800000)>> 16) | ((data & 0xC000)>>9) | ((data & 0x80)>>3);
+                            *q++ |= (RGB121(data)<<4);
                         } else {
-                            *q=((data & 0x800000)>> 20) | ((data & 0xC000)>>13) | ((data & 0x80)>>7);
+                            *q=RGB121(data);
                         }
                         toggle=!toggle;
                     }
@@ -4104,9 +4106,9 @@ void MIPS16 loadarray(unsigned char* p) {
             if (a3float)c = (int)a3float[i];
             else c = (int)a3int[i];
             if(toggle){
-                *q++ |= ((c & 0x800000)>> 16) | ((c & 0xC000)>>9) | ((c & 0x80)>>3);
+                *q++ |= (RGB121(c)<<4);
             } else {
-                *q=((c & 0x800000)>> 20) | ((c & 0xC000)>>13) | ((c & 0x80)>>7);
+                *q=RGB121(c);
             }
             toggle=!toggle;
         }
@@ -6332,14 +6334,14 @@ void cmd_map(void){
     if((p=checkstring(cmdline, (unsigned char *)"RESET"))) {
         while(QVgaScanLine!=0){}
         for(int i=0;i<16;i++)remap[i]=RGB121map[i];
-        for(int i=0;i<16;i++)map16[i]=((remap[i] & 0x800000)>> 20) | ((remap[i] & 0xC000)>>13) | ((remap[i] & 0x80)>>7);
+        for(int i=0;i<16;i++)map16[i]=RGB121(remap[i]);
      } else if((p=checkstring(cmdline, (unsigned char *)"MAXIMITE"))) {
         while(QVgaScanLine!=0){}
         for(int i=0;i<16;i++)remap[i]=CMM1map[i];
-        for(int i=0;i<16;i++)map16[i]=((remap[i] & 0x800000)>> 20) | ((remap[i] & 0xC000)>>13) | ((remap[i] & 0x80)>>7);
+        for(int i=0;i<16;i++)map16[i]=RGB121(remap[i]);
     } else if((p=checkstring(cmdline, (unsigned char *)"SET"))) {
         while(QVgaScanLine!=0){}
-        for(int i=0;i<16;i++)map16[i]=((remap[i] & 0x800000)>> 20) | ((remap[i] & 0xC000)>>13) | ((remap[i] & 0x80)>>7);
+        for(int i=0;i<16;i++)map16[i]=RGB121(remap[i]);
     } else {
         static bool first=true;
     	int cl = getinteger(cmdline);
@@ -6364,11 +6366,12 @@ void cmd_tile(void){
     if(checkstring(cmdline,(unsigned char *)"RESET")){
         for(int x=0;x<X_TILE;x++){
             for(int y=0;y<Y_TILE;y++){
-                tilefcols[y*X_TILE+x]=Option.VGAFC;
-                tilebcols[y*X_TILE+x]=Option.VGABC;
+                tilefcols[y*X_TILE+x]=RGB121pack(gui_fcolour);
+                tilebcols[y*X_TILE+x]=RGB121pack(gui_bcolour);
             }
         }
     } else if((tp=checkstring(cmdline,(unsigned char *)"HEIGHT"))){
+        if(!(WriteBuf==DisplayBuf))error("Not available when write is set to a buffer");
         ytileheight=getint(tp,12,VRes);
         Y_TILE=VRes/ytileheight;
         if(VRes % ytileheight)Y_TILE++;
@@ -6382,13 +6385,11 @@ void cmd_tile(void){
         int tilebcolour, tilefcolour ;
         if(*argv[4]){
             tilefcolour = getColour((char *)argv[4], 0);
-            fcolour = ((tilefcolour & 0x800000)>> 20) | ((tilefcolour & 0xC000)>>13) | ((tilefcolour & 0x80)>>7);
-            fcolour= (fcolour<<12) | (fcolour<<8) | (fcolour<<4) | fcolour;
+            fcolour = RGB121pack(tilefcolour);
         }
         if(argc>=7 && *argv[6]){
             tilebcolour = getColour((char *)argv[6], 0);
-            bcolour = ((tilebcolour & 0x800000)>> 20) | ((tilebcolour & 0xC000)>>13) | ((tilebcolour & 0x80)>>7);
-            bcolour= (bcolour<<12) | (bcolour<<8) | (bcolour<<4) | bcolour;
+            bcolour = RGB121pack(tilebcolour);
         }
         if(argc>=9 && *argv[8]){
             xlen=getint(argv[8],1,X_TILE-x);
@@ -6752,10 +6753,21 @@ void cmd_tile(void){
     int xlen=1,ylen=1;
     if(DISPLAY_TYPE!=SCREENMODE1)error("Invalid for this screen mode");
     if(checkstring(cmdline,(unsigned char *)"RESET")){
+        fcolour=(FullColour) ? RGB555(Option.DefaultFC):  RGB332(Option.DefaultFC);
+        bcolour=(FullColour) ? RGB555(Option.DefaultBC):  RGB332(Option.DefaultBC);
         for(int x=0;x<X_TILE;x++){
             for(int y=0;y<Y_TILE;y++){
-                tilefcols[y*X_TILE+x]=Option.VGAFC;
-                tilebcols[y*X_TILE+x]=Option.VGABC;
+#ifdef HDMI
+                if(FullColour){
+#endif
+                    if(fcolour!=0xFFFFFFFF) tilefcols[y*X_TILE+x]=fcolour;
+                    if(bcolour!=0xFFFFFFFF) tilebcols[y*X_TILE+x]=bcolour;
+#ifdef HDMI
+                } else {
+                    if(fcolour!=0xFFFFFFFF) tilefcols_w[y*X_TILE+x]=fcolour;
+                    if(bcolour!=0xFFFFFFFF) tilebcols_w[y*X_TILE+x]=bcolour;
+                }
+#endif
             }
         }
     } else if((tp=checkstring(cmdline,(unsigned char *)"HEIGHT"))){
@@ -6941,34 +6953,14 @@ if(DISPLAY_TYPE==SCREENMODE1){
     Y_TILE=VRes/ytileheight;
     if(VRes % ytileheight)Y_TILE++;
 #ifdef PICOMITEVGA
-    if(DISPLAY_TYPE==SCREENMODE1 && WriteBuf==DisplayBuf){
+    if(DISPLAY_TYPE==SCREENMODE1/* && WriteBuf==DisplayBuf*/){
+        gui_fcolour=Option.DefaultFC;
+        gui_bcolour=Option.DefaultBC;
 #ifdef HDMI
-        memset((void *)WriteBuf,0,ScreenSize);
-        if(FullColour){
-            uint16_t bcolour = RGB555(gui_bcolour);
-            uint16_t fcolour = RGB555(gui_fcolour);
-            for(int x=0;x<X_TILE;x++){
-                for(int y=0;y<Y_TILE;y++){
-                    tilefcols[y*X_TILE+x]=fcolour;
-                    tilebcols[y*X_TILE+x]=bcolour;
-                } 
-            }
-        } else {
-           uint8_t bcolour = RGB332(gui_bcolour);
-           uint8_t fcolour = RGB332(gui_fcolour);
-            for(int x=0;x<X_TILE;x++){
-                for(int y=0;y<Y_TILE;y++){
-                    tilefcols_w[y*X_TILE+x]=fcolour;
-                    tilebcols_w[y*X_TILE+x]=bcolour;
-                } 
-            }
-        }
-        CurrentX=CurrentY=0;
+        settiles();
 #else
-        int bcolour = RGB121(gui_bcolour);
-        int fcolour = RGB121(gui_fcolour);
-        bcolour= (bcolour<<12) | (bcolour<<8) | (bcolour<<4) | bcolour;
-        fcolour= (fcolour<<12) | (fcolour<<8) | (fcolour<<4) | fcolour;
+        int bcolour = RGB121pack(gui_bcolour);
+        int fcolour = RGB121pack(gui_fcolour);
         for(int x=0;x<X_TILE;x++){
             for(int y=0;y<Y_TILE;y++){
                 tilefcols[y*X_TILE+x]=fcolour;
@@ -7040,7 +7032,7 @@ void cmd_refresh(void){
 void DrawPixel16(int x, int y, int c){
     if(x<0 || y<0 || x>=HRes || y>=VRes)return;
     if(Option.DISPLAY_TYPE>=VIRTUAL && WriteBuf==NULL) WriteBuf=GetMemory(VMaxH*VMaxV/8);
-    unsigned char colour = ((c & 0x800000)>> 20) | ((c & 0xC000)>>13) | ((c & 0x80)>>7);
+    unsigned char colour = RGB121(c);
 	uint8_t *p=(uint8_t *)(((uint32_t) WriteBuf)+(y*(HRes>>1))+(x>>1));
     if(x & 1){
         *p &=0x0F;
@@ -7053,7 +7045,7 @@ void DrawPixel16(int x, int y, int c){
 void DrawRectangle16(int x1, int y1, int x2, int y2, int c){
     int x,y,x1p,x2p,t;
 //    unsigned char mask;
-    unsigned char colour = ((c & 0x800000)>> 20) | ((c & 0xC000)>>13) | ((c & 0x80)>>7);
+    unsigned char colour = RGB121(c);;
     unsigned char bcolour=(colour<<4) | colour;
     if(Option.DISPLAY_TYPE>=VIRTUAL && WriteBuf==NULL) WriteBuf=GetMemory(VMaxH*VMaxV/8);
     if(x1 < 0) x1 = 0;
@@ -7091,8 +7083,8 @@ void DrawBitmap16(int x1, int y1, int width, int height, int scale, int fc, int 
     int i, j, k, m, x, y;
 //    unsigned char mask;
     if(x1>=HRes || y1>=VRes || x1+width*scale<0 || y1+height*scale<0)return;
-    unsigned char fcolour = ((fc & 0x800000)>> 20) | ((fc & 0xC000)>>13) | ((fc & 0x80)>>7);
-    unsigned char bcolour = ((bc & 0x800000)>> 20) | ((bc & 0xC000)>>13) | ((bc & 0x80)>>7);
+    unsigned char fcolour = RGB121(fc);
+    unsigned char bcolour = RGB121(bc);
     if(Option.DISPLAY_TYPE>=VIRTUAL && WriteBuf==NULL) WriteBuf=GetMemory(VMaxH*VMaxV/8);
     for(i = 0; i < height; i++) {                                   // step thru the font scan line by line
         for(j = 0; j < scale; j++) {                                // repeat lines to scale the font
@@ -7172,7 +7164,7 @@ void DrawBuffer16(int x1, int y1, int x2, int y2, unsigned char *p){
 	        c.rgbbytes[0]=*p++; //this order swaps the bytes to match the .BMP file
 	        c.rgbbytes[1]=*p++;
 	        c.rgbbytes[2]=*p++;
-            fcolour = ((c.rgb & 0x800000)>> 20) | ((c.rgb & 0xC000)>>13) | ((c.rgb & 0x80)>>7);
+            fcolour = RGB121(c.rgb);
             pp=(uint8_t *)(((uint32_t) WriteBuf)+(y*(HRes>>1))+(x>>1));
             if(x & 1){
                 *pp &=0x0F;
@@ -7410,10 +7402,8 @@ void DrawBitmap2(int x1, int y1, int width, int height, int scale, int fc, int b
             fcolour = (FullColour)? RGB555(fc) : RGB332(fc);
             bcolour = (FullColour)? RGB555(bc) : RGB332(bc);
 #else
-            fcolour = ((fc & 0x800000)>> 20) | ((fc & 0xC000)>>13) | ((fc & 0x80)>>7);
-            fcolour= (fcolour<<12) | (fcolour<<8) | (fcolour<<4) | fcolour;
-            bcolour = ((bc & 0x800000)>> 20) | ((bc & 0xC000)>>13) | ((bc & 0x80)>>7);
-            bcolour= (bcolour<<12) | (bcolour<<8) | (bcolour<<4) | bcolour;
+            fcolour = RGB121pack(fc);
+            bcolour = RGB121pack(bc);
 #endif
             int xt=x1 / xa;
             int yt=y1 / ya;
@@ -7979,8 +7969,8 @@ void MIPS16 ResetDisplay(void) {
             DrawBufferFast=DrawBuffer2Fast;
             ReadBufferFast=ReadBuffer2Fast;
             DrawPixel=DrawPixel2;
-            PromptFC = gui_fcolour= RGB121map[Option.VGAFC & 0xf];
-            PromptBC = gui_bcolour= RGB121map[Option.VGABC & 0xf];
+            PromptFC = gui_fcolour= Option.DefaultFC;
+            PromptBC = gui_bcolour= Option.DefaultBC;
         }
 #ifdef HDMI
         settiles();
@@ -7993,8 +7983,8 @@ void MIPS16 ResetDisplay(void) {
 #endif
         for(int x=0;x<X_TILE;x++){
             for(int y=0;y<Y_TILE;y++){
-                tilefcols[y*X_TILE+x]=Option.VGAFC;
-                tilebcols[y*X_TILE+x]=Option.VGABC;
+                tilefcols[y*X_TILE+x]=RGB121pack(Option.DefaultFC);
+                tilebcols[y*X_TILE+x]=RGB121pack(Option.DefaultBC);
            }
         }
 #endif
