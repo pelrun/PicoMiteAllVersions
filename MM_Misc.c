@@ -49,6 +49,10 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 #ifdef rp2350
 #include "pico/rand.h"
 #endif
+#ifdef PICOCALC
+#include "picocalc/i2ckbd.h"
+#include "picocalc/conf_app.h"
+#endif
 #ifdef USBKEYBOARD
 extern int caps_lock;
 extern int num_lock;
@@ -4826,6 +4830,16 @@ void MIPS16 fun_info(void){
         targ=T_INT;
         iret=((adcint==adcint1 && adcint) ? 1 : ((adcint==adcint2 && adcint) ? 2 : 0));
         return;
+#ifdef PICOCALC
+    } else if((tp=checkstring(ep, (unsigned char *)"BATTERY"))){
+        init_i2c_kbd();
+        int bat_pcnt = read_battery();
+        bat_pcnt = bat_pcnt>>8;
+        bitClear(bat_pcnt,7);
+        iret=bat_pcnt;
+        targ=T_INT;
+        return;
+#endif
     } else if(checkstring(ep, (unsigned char *)"BCOLOUR") || checkstring(ep, (unsigned char *)"BCOLOR")){
             iret=gui_bcolour;
             targ=T_INT;
@@ -4866,6 +4880,17 @@ void MIPS16 fun_info(void){
             iret = (int64_t)(uint32_t)CallTable;
             targ = T_INT;
             return;
+#ifdef PICOCALC
+        } else if((tp=checkstring(ep, (unsigned char *)"CHARGING"))){
+            init_i2c_kbd();
+            int bat_pcnt = read_battery();
+            bat_pcnt = bat_pcnt>>8;
+            int bat_charging = bitRead(bat_pcnt,7);
+            bitClear(bat_pcnt,7);
+            iret=bat_charging;
+            targ=T_INT;
+            return;
+#endif
         } else if(checkstring(ep, (unsigned char *)"CPUSPEED")){
             IntToStr((char *)sret,Option.CPU_Speed*1000,10);
             CtoM(sret);

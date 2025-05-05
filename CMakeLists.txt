@@ -116,6 +116,12 @@ if(COMPILE STREQUAL "VGARP2350" OR COMPILE STREQUAL "WEBRP2350" OR COMPILE STREQ
 	)
 endif()
 
+if(PICOCALC STREQUAL "true")
+	target_sources(PicoMite PRIVATE
+	picocalc/i2ckbd.c
+	)
+endif()
+
 set_source_files_properties(mmc_stm32.c PROPERTIES COMPILE_FLAGS -O2)
 set_source_files_properties(ff.c PROPERTIES COMPILE_FLAGS -Os)
 set_source_files_properties(GUI.c PROPERTIES COMPILE_FLAGS -Os)
