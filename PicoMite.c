@@ -849,7 +849,7 @@ void MIPS16 EditInputLine(void) {
  
                                 // Lets put the cursor at the beginning of where the command is displayed.
                                 // backspace to the beginning of line
-//#define USEBACKSPACE
+#define USEBACKSPACE
 #ifdef USEBACKSPACE                                
                                 while(j)  {
                                   if (j==l4 || j==l3 ||j==l2 ){DisplayPutC('\b');SSPrintString("\e[1A");SSPrintString(goend);}else{ MMputchar('\b',0);}
@@ -4672,6 +4672,7 @@ void MIPS16 SaveProgramToFlash(unsigned char *pm, int msg) {
     unsigned char *p, fontnbr, prevchar = 0, buf[STRINGSIZE];
     unsigned short endtoken, tkn;
     int nbr, i, j, n, SaveSizeAddr;
+    bool continuation=false;
     multi=false;
     uint32_t storedupdates[MAXCFUNCTION], updatecount=0, realflashsave;
     initFonts();
@@ -4690,7 +4691,12 @@ void MIPS16 SaveProgramToFlash(unsigned char *pm, int msg) {
     nbr = 0;
     // this is used to count the number of bytes written to flash
     while(*pm) {
-        p = inpbuf;
+contloop:
+        if(continuation){
+            p=&inpbuf[strlen((char *)inpbuf)];
+            continuation=false;
+        }
+        else p = inpbuf;
         while(!(*pm == 0 || *pm == '\r' || (*pm == '\n' && prevchar != '\r'))) {
             if(*pm == TAB) {
                 do {*p++ = ' ';
@@ -4708,7 +4714,11 @@ void MIPS16 SaveProgramToFlash(unsigned char *pm, int msg) {
         *p = 0;                                                     // terminate the string in inpbuf
 
         if(*inpbuf == 0 && (*pm == 0 || (!isprint((uint8_t)*pm) && pm[1] == 0))) break; // don't save a trailing newline
-
+        if(inpbuf[strlen((char *)inpbuf)-1]==Option.continuation && Option.continuation){
+            continuation=true;
+            inpbuf[strlen((char *)inpbuf)-1]=0; //strip the continuation character
+            goto contloop;
+        }
         tokenise(false);                                            // turn into executable code
         p = tknbuf;
         while(!(p[0] == 0 && p[1] == 0)) {
