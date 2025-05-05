@@ -106,6 +106,9 @@ struct option_s {
     unsigned char RTC_Clock;
     unsigned char RTC_Data; //4=60
 //
+    #ifdef PICOCALC
+        uint8_t KEYBOARDBL;
+    #endif
     #ifdef PICOMITE
         char dummy[4];                // maximum number of controls allowed //64
     #endif

@@ -2056,6 +2056,9 @@ void MIPS16 printoptions(void){
     #ifdef GUICONTROLS
     if(Option.MaxCtrls)PO2Int("GUI CONTROLS", Option.MaxCtrls-1);
     #endif
+    #ifdef PICOCALC
+    if(Option.KEYBOARDBL)PO2Int("BACKLIGHT KB", Option.KEYBOARDBL);
+    #endif
     #ifdef PICOMITEWEB
     if(*Option.SSID){
         char password[]="****************************************************************";
@@ -3733,6 +3736,17 @@ tp = checkstring(cmdline, (unsigned char *)"HEARTBEAT");
         if(checkstring(tp, (unsigned char *)"ON"))      { CMM1=1; return;  }
         error("Syntax");
     }
+#ifdef PICOCALC
+    tp = checkstring(cmdline, (unsigned char *)"BACKLIGHT KB");
+    if(tp) {
+        getargs(&tp,1,(unsigned char *)",");
+        Option.KEYBOARDBL=getint(argv[0],0,255);
+        init_i2c_kbd();
+        int kbd_backlight = set_kbd_backlight(Option.KEYBOARDBL);
+        SaveOptions();
+        return;
+    }
+#endif
 #ifdef PICOMITEWEB
 	tp = checkstring(cmdline, (unsigned char *)"WEB MESSAGES");
 	if(tp) {

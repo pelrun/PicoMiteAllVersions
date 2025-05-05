@@ -1,4 +1,14 @@
-#PicoCalc
+# PicoCalc
+
+Information Command | Decription
+:--- | :---
+MM.INFO(BATTERY) | <ins>PICOCALC ONLY</ins> <br/> Returns the current battery level percentage (0-100).
+MM.INFO(CHARGING) | <ins>PICOCALC ONLY</ins> <br/> Returns 1 if battery is charging on external power, 0 if battery is not charging.
+
+Option Command | Decription
+:--- | :---
+OPTION BACKLIGHT KB brightness | <ins>PICOCALC ONLY</ins> <br/> Sets the brightness of the keyboard backlight. 'brightness' is a value between 0 (backlight off) and 255 (maximum brightness).
+
 
 INSTALL PICO SDK
 ----------------
