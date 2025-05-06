@@ -539,6 +539,14 @@ void CheckI2CKeyboard(int noerror, int read) {
           realc=PUP; break;
         case 0xd7:
           realc=PDOWN; break;
+        case 0x0a:
+          realc=ENTER; break;
+        case 0xc1: // CapsLK
+        case 0xa2: // Shift (left)
+        case 0xa5: // Ctrl
+        case 0xa1: // Alt
+        case 0xa3: // Shift (right)
+          return; // consume and ignore these modifier keys!
         default:
           realc = c; break;
       }
