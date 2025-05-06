@@ -751,15 +751,7 @@ void MMgetline(int filenbr, char *p) {
 		}
 
         if(c == '\n') {                                             // what to do with a newline
-#ifdef PICOCALC
-            if(filenbr == 0 && EchoOption) {
-                MMPrintString("\r\n");
-                break;                                              // on the console this means the end of the line - stop collecting
-            } else
-                continue ;                                          // for files loop around looking for the following newline
-#else
                 break;                                              // a newline terminates a line (for a file)
-#endif
         }
 
         if(c == '\r') {
