@@ -497,10 +497,32 @@ void CheckI2CKeyboard(int noerror, int read) {
       int c = buff >> 8;
       int realc = 0;
       switch(c) {
-        case 0xb1:
-          realc = ESC; break;
+        // Refer to Appendix H in PicoMite User Manual
+        // PicoCalc must be mapped to expected PicoMite keys
+        case 0xd4:
+          realc=DEL; break;
+        case 0xb5:
+          realc=UP; break;
+        case 0xb6:
+          realc=DOWN; break;
+        case 0xb4:
+          realc=LEFT; break;
+        case 0xb7:
+          realc=RIGHT; break;
+        case 0xd1:
+          realc=INSERT; break; // ALT + I
+        case 0xd2:
+          realc=HOME; break; // SHIFT + TAB (collision, see below)
+        case 0xd5:
+          realc=END; break; // SHIFT + DEL (collision, see below)
+        case 0xd6:
+          realc=PUP; break; // SHIFT + UP
+        case 0xd7:
+          realc=PDOWN; break; // SHIFT + DOWN (collision, see below)
+        case 0xa1:
+          realc=ALT; break; // Note: SHIFT + ENTER also sends ALT!
         case 0x81:
-          realc = F1; break;
+          realc=F1; break;
         case 0x82:
           realc=F2; break;
         case 0x83:
@@ -510,43 +532,38 @@ void CheckI2CKeyboard(int noerror, int read) {
         case 0x85:
           realc=F5; break;
         case 0x86:
-          realc=F6; break;
+          realc=F6; break; // SHIFT + F1
         case 0x87:
-          realc=F7; break;
+          realc=F7; break; // SHIFT + F2
         case 0x88:
-          realc=F8; break;
+          realc=F8; break; // SHIFT + F3
         case 0x89:
-          realc=F9; break;
+          realc=F9; break; // SHIFT + F4
         case 0x90:
-          realc=F10; break;
-        case 0xb5:
-          realc=UP; break;
-        case 0xb6:
-          realc=DOWN; break;
-        case 0xb7:
-          realc=RIGHT; break;
-        case 0xb4:
-          realc=LEFT; break;
+          realc=F10; break; // SHIFT + F5
+        // F11 not on PicoCalc
+        // F12 not on PicoCalc
+        // PrtScr/SysRq not on PicoCalc
         case 0xd0:
           realc=BreakKey; break;
-        case 0xd1:
-          realc=INSERT; break;
-        case 0xd2:
-          realc=HOME; break;
-        case 0xd5:
-          realc=END; break;
-        case 0xd6:
-          realc=PUP; break;
-        case 0xd7:
-          realc=PDOWN; break;
+        // SHIFT_TAB sends Home on PicoCalc
+        // SHIFT_DEL sends End on PicoCalc
+        // DOWNSEL (SHIFT_DOWN_ARROW) sends Page Down (PDOWN) on PicoCalc
+        //   Note: (SHIFT_UP_ARROW) sends Page Up (PUP) on PicoCalc
+        // RIGHTSEL (SHIFT_RIGHT_ARROW) sends nothing on PicoCalc
+        //   Note: (SHIFT_LEFT_ARROW) sends nothing on PicoCalc
+        // Note: PicoCalc cannot send shifted Fn keys!
+        // --- Appendix H ends
+        case 0xb1:
+          realc=ESC; break;
         case 0x0a:
           realc=ENTER; break;
-        case 0xc1: // CapsLK
+        // --- Modifier keys must be consumed and ignored!
         case 0xa2: // Shift (left)
-        case 0xa5: // Ctrl
-        case 0xa1: // Alt
         case 0xa3: // Shift (right)
-          return; // consume and ignore these modifier keys!
+        case 0xa5: // Ctrl
+        case 0xc1: // CapsLK
+          return;
         default:
           realc = c; break;
       }
