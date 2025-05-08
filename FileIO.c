@@ -3995,9 +3995,6 @@ void MIPS16 cmd_files(void)
     FatFSFileSystem=t-1;
     fullpath(q);
     if(Option.DISPLAY_CONSOLE){ClearScreen(gui_bcolour);CurrentX=0;CurrentY=0;}
-//#ifdef PICOCALC
-//    ResetHWScroll();
-//#endif
     putConsole('A'+FatFSFileSystem,0);
     putConsole(':',1);
     MMPrintString(fullpathname[FatFSFileSystem]);PRet();

@@ -177,9 +177,6 @@ int ScreenSize=0;
     #endif
 #endif
 
-//#ifdef PICOCALC
-//short offsetY = 0;
-//#endif
 
 void cmd_ReadTriangle(unsigned char *p);
 void (*DrawRectangle)(int x1, int y1, int x2, int y2, int c) = (void (*)(int , int , int , int , int ))DisplayNotSet;
@@ -3419,9 +3416,6 @@ if ((p = checkstring(cmdline, (unsigned char*)"COMPRESSED"))) {
 }
 /*  @endcond */
 void cmd_cls(void) {
-//#ifdef PICOCALC
-//    ResetHWScroll();
-//#endif
 
     if(Option.DISPLAY_TYPE == 0) error("Display not configured");
 #ifdef GUICONTROLS
@@ -7869,11 +7863,7 @@ void SetFont(int fnt) {
     gui_font_width = FontTable[fnt >> 4][0] * (fnt & 0b1111);
     gui_font_height = FontTable[fnt >> 4][1] * (fnt & 0b1111);
    if(Option.DISPLAY_CONSOLE) {
-//#ifdef PICOCALC
-//        Option.Height = LCD_HEIGHT/gui_font_height;
-//#else
         Option.Height = VRes/gui_font_height;
-//#endif
         Option.Width = HRes/gui_font_width;
     }
     gui_font = fnt;
