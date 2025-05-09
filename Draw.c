@@ -176,8 +176,6 @@ int ScreenSize=0;
     uint32_t mergetimer=0;
     #endif
 #endif
-
-
 void cmd_ReadTriangle(unsigned char *p);
 void (*DrawRectangle)(int x1, int y1, int x2, int y2, int c) = (void (*)(int , int , int , int , int ))DisplayNotSet;
 void (*DrawBitmap)(int x1, int y1, int width, int height, int scale, int fc, int bc, unsigned char *bitmap) = (void (*)(int , int , int , int , int , int , int , unsigned char *))DisplayNotSet;
@@ -3416,7 +3414,6 @@ if ((p = checkstring(cmdline, (unsigned char*)"COMPRESSED"))) {
 }
 /*  @endcond */
 void cmd_cls(void) {
-
     if(Option.DISPLAY_TYPE == 0) error("Display not configured");
 #ifdef GUICONTROLS
     HideAllControls();

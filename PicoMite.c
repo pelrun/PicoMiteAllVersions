@@ -4357,8 +4357,8 @@ if(Option.CPU_Speed==FreqSVGA){ //adjust the size of the heap
     if(Option.BackLightLevel)setBacklight(Option.BackLightLevel, 0);
 #else
     uSec(300000);
-#endif
     if(Option.BackLightLevel)setBacklight(Option.BackLightLevel);
+#endif
 #endif
     ErrorInPrompt = false;
     exception_set_exclusive_handler(HARDFAULT_EXCEPTION,sigbus);

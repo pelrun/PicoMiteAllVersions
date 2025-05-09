@@ -142,7 +142,6 @@ These are the functions responsible for executing the I2C related commands in MM
 They are supported by utility functions that are grouped at the end of this file
 
 ********************************************************************************************/
-
 #ifdef PICOCALC
 void I2C_Send_RegData(int i2caddr,int reg,char command){
     int i2cret;
@@ -158,19 +157,19 @@ void I2C_Send_RegData(int i2caddr,int reg,char command){
 //	mmI2Cvalue=HAL_I2C_Master_Transmit(&hi2c1, (uint16_t)i2caddr, I2C_Send_Buffer, I2C_Sendlen, I2C_Timeout);
 }
 #endif
-void I2C_Send_Command(char command){
-	int i2cret;
-	int i2caddr=SSD1306_I2C_Addr;
-	I2C_Send_Buffer[0]=0;
-	I2C_Send_Buffer[1]=command;
-	I2C_Sendlen=2;
-	I2C_Timeout=1000;
-	if(I2C1locked)i2cret=i2c_write_timeout_us(i2c1, (uint8_t)i2caddr, (uint8_t *)I2C_Send_Buffer, I2C_Sendlen,false, I2C_Timeout*1000);
-	else i2cret=i2c_write_timeout_us(i2c0, (uint8_t)i2caddr, (uint8_t *)I2C_Send_Buffer, I2C_Sendlen,false, I2C_Timeout*1000);
-	mmI2Cvalue=0;
-	if(i2cret==PICO_ERROR_GENERIC)mmI2Cvalue=1;
-	if(i2cret==PICO_ERROR_TIMEOUT)mmI2Cvalue=2;
-//	mmI2Cvalue=HAL_I2C_Master_Transmit(&hi2c1, (uint16_t)i2caddr, I2C_Send_Buffer, I2C_Sendlen, I2C_Timeout);
+void I2C_Send_Command(char command) {
+  int i2cret;
+  int i2caddr = SSD1306_I2C_Addr;
+  I2C_Send_Buffer[0] = 0;
+  I2C_Send_Buffer[1] = command;
+  I2C_Sendlen = 2;
+  I2C_Timeout = 1000;
+  if (I2C1locked) i2cret = i2c_write_timeout_us(i2c1, (uint8_t) i2caddr, (uint8_t * ) I2C_Send_Buffer, I2C_Sendlen, false, I2C_Timeout * 1000);
+  else i2cret = i2c_write_timeout_us(i2c0, (uint8_t) i2caddr, (uint8_t * ) I2C_Send_Buffer, I2C_Sendlen, false, I2C_Timeout * 1000);
+  mmI2Cvalue = 0;
+  if (i2cret == PICO_ERROR_GENERIC) mmI2Cvalue = 1;
+  if (i2cret == PICO_ERROR_TIMEOUT) mmI2Cvalue = 2;
+  //	mmI2Cvalue=HAL_I2C_Master_Transmit(&hi2c1, (uint16_t)i2caddr, I2C_Send_Buffer, I2C_Sendlen, I2C_Timeout);
 }
 void I2C_Send_Data(unsigned char * data, int n) {
   int i2cret;

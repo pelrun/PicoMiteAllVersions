@@ -436,8 +436,6 @@ extern void __not_in_flash_func(spi_finish)(spi_inst_t *spi);
 #define P_OFF				0
 #define P_I2C_SCL            0
 #define P_I2C_SDA            1
-
-
 extern void Display_Refresh(void);
 extern void waitwhilebusy(void);
 struct Displays {
