@@ -31,10 +31,15 @@ SETUP PICOCALC FIRMWARE
 mkdir -p ~/picocalc && cd ~/picocalc
 git clone https://github.com/madcock/PicoMiteAllVersions.git
 cd PicoMiteAllVersions
-mv ~/pico/pico-sdk/src/rp2_common/hardware_flash/flash.c ~/pico/pico-sdk/src/rp2_common/hardware_flash/flash.bak
-ln -s ~/picocalc/PicoMiteAllVersions/flash.c ~/pico/pico-sdk/src/rp2_common/hardware_flash/flash.c
 mv ~/pico/pico-sdk/src/rp2_common/hardware_gpio/gpio.c ~/pico/pico-sdk/src/rp2_common/hardware_gpio/gpio.bak
 ln -s ~/picocalc/PicoMiteAllVersions/gpio.c ~/pico/pico-sdk/src/rp2_common/hardware_gpio/gpio.c
+mv ~/pico/pico-sdk/src/rp2_common/hardware_gpio/include/hardware/gpio.h ~/pico/pico-sdk/src/rp2_common/hardware_gpio/include/hardware/gpio.bak
+ln -s ~/picocalc/PicoMiteAllVersions/gpio.h ~/pico/pico-sdk/src/rp2_common/hardware_gpio/include/hardware/gpio.h
+mv ~/pico/pico-sdk/src/rp2_common/pico_float/float_sci_m33_vfp.S ~/pico/pico-sdk/src/rp2_common/pico_float/float_sci_m33_vfp.bak
+ln -s ~/picocalc/PicoMiteAllVersions/float_sci_m33_vfp.S ~/pico/pico-sdk/src/rp2_common/pico_float/float_sci_m33_vfp.S
+mv ~/pico/pico-sdk/src/rp2_common/hardware_flash/flash.c ~/pico/pico-sdk/src/rp2_common/hardware_flash/flash.bak
+ln -s ~/picocalc/PicoMiteAllVersions/flash.c ~/pico/pico-sdk/src/rp2_common/hardware_flash/flash.c
+
 ```
 EDIT ``~/picocalc/PicoMiteAllVersions/CMakeLists.txt`` TO CHOOSE TARGET
 -----------------------------------------------------------------------
