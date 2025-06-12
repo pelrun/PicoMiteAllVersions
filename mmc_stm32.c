@@ -1504,11 +1504,7 @@ void InitReservedIO(void) {
 			I2C_enabled=1;
 			I2C0SDApin=Option.SYSTEM_I2C_SDA;
 			I2C0SCLpin=Option.SYSTEM_I2C_SCL;
-#ifdef PICOCALC
-			I2C_Timeout=500;
-#else
-			I2C_Timeout=2;
-#endif
+			I2C_Timeout=SystemI2CTimeout;
 		} else {
 			I2C1locked=1;
 #ifdef PICOCALC
@@ -1521,11 +1517,7 @@ void InitReservedIO(void) {
 			I2C2_enabled=1;	
 			I2C1SDApin=Option.SYSTEM_I2C_SDA;
 			I2C1SCLpin=Option.SYSTEM_I2C_SCL;
-#ifdef PICOCALC
-			I2C2_Timeout=500;
-#else
-			I2C2_Timeout=2;
-#endif
+			I2C2_Timeout=SystemI2CTimeout;
 		}
 		if(Option.RTC)RtcGetTime(1);
 #ifndef USBKEYBOARD

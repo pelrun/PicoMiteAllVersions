@@ -65,7 +65,11 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 #define I2C_Status_Slave_Receive_Rdy            0x00100000
 #define I2C_Status_Slave_Receive_Full           0x00200000
 #define SSD1306_I2C_Addr 0x3c
-
+#ifdef PICOCALC
+#define SystemI2CTimeout 500
+#else
+#define SystemI2CTimeout 5
+#endif
 // Global variables provided by I2C.c
 extern unsigned int I2C_Timer;                                      // master timeout counter
 extern char *I2C_IntLine;                                           // pointer to the master interrupt line number
