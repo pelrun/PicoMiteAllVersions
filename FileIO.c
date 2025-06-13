@@ -4996,7 +4996,7 @@ void LoadOptions(void)
     RGB121map[15] = WHITE;
 
 #ifdef PICOCALC
-    Option.DISPLAY_TYPE = ILI9488P;
+    Option.DISPLAY_TYPE = ST7796SP;
     Option.SYSTEM_CLK = 14;
     Option.SYSTEM_MOSI = 15;
     Option.SYSTEM_MISO = 16;
