@@ -9,6 +9,14 @@ Option Command | Decription
 :--- | :---
 OPTION BACKLIGHT KB brightness | <ins>PICOCALC ONLY</ins> <br/> Sets the brightness of the keyboard backlight. 'brightness' is a value between 0 (backlight off) and 255 (maximum brightness).
 
+NEW PICOCALC USERS
+------------------
+Please download and install the [newest release](https://github.com/madcock/PicoMiteAllVersions/releases).
+If installing on a brand new PicoCalc, your keyboard firmware/bios is probably out of date. There is no easy way to tell which firmware is already installed, but if it's the "old" one, the PicoCalc specific ``MM.INFO()`` commands listed above won't work, and you'll probably get constant i2c keyboard disconnect errors which will make the device unusable. _It is highly recommended to update your keyboard firmware!_
+
+Use the [official guide to update your keyboard firmware](https://github.com/clockworkpi/PicoCalc/wiki/Setting-Up-Arduino-Development-for-PicoCalc-keyboard). There's a lot of extra information there which you can ignore unless you want to develop your own keyboard firmware. All you need to do is download ``STM32CubeProgrammer``, the newest keyboard firmware binary ([currently 1.2](https://github.com/clockworkpi/PicoCalc/blob/master/Bin/PicoCalc_BIOS_v1.2.bin) but please check to make sure there isn't anything newer), install it as described in the document using the dipswitch, and then reassemble everything carefully. Make sure you've put the dipswitch back in its original position after flashing the BIOS update. You'll only ever need to do this once, or perhaps again if another critical update is released. But regular PicoMite firmware updates do not require this keyboard BIOS update and it won't be lost if your batteries are removed, etc.
+
+Any assembly/disassembly of the PicoCalc risks damaging the extremely fragile screen. Once it's damaged, there's no way to fix it, and a replacement will be needed. if necessary, contact [alex@clockworkpi.com](mailto:alex@clockworkpi.com) for a repalcement, and give him your original order invoice details and (usually picture) proof of screen damage. Be _very_ careful the display is seated properly when assembling! I recommend taping the screen down as [described in this post](https://forum.clockworkpi.com/t/before-replacing-the-pico-read-this-to-avoid-cracked-screen/16666/10). Electrical tape and kapton tape have both proven to work. The important thing is to never reattach the back with screws unless you are certain the screen is seated properly.
 
 INSTALL PICO SDK
 ----------------
