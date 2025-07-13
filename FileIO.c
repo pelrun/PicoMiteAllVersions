@@ -342,7 +342,7 @@ void ErrorThrow(int e, int type)
 }
 void ResetFlashStorage(int umount){
     int boot_count=0;
-    if(umount)lfs_unmount(&lfs); 
+    if(umount)lfs_unmount(&lfs);
     FSerror=lfs_format(&lfs, &pico_lfs_cfg);ErrorCheck(0);
     FSerror=lfs_mount(&lfs, &pico_lfs_cfg);	ErrorCheck(0);
     int fnbr = FindFreeFileNbr();
@@ -400,16 +400,16 @@ void MIPS16 cmd_disk(void){
     char *p=(char *)getCstring(cmdline);
     char *b=GetTempMemory(STRINGSIZE);
     for(int i=0;i<strlen(p);i++)b[i]=toupper(p[i]);
-    if(strcmp(b, "A:/FORMAT")==0)  { 
+    if(strcmp(b, "A:/FORMAT")==0)  {
         FatFSFileSystem = FatFSFileSystemSave = 0;
         ResetFlashStorage(1);
-        return; 
+        return;
     }
     if(strcmp(b, "A:")==0)  { FatFSFileSystem = FatFSFileSystemSave = 0;  return; }
     if(strcmp(b, "B:")==0)    {
         if(!(Option.SD_CS || Option.CombinedCS))error("B: drive not enabled");
         FatFSFileSystem = FatFSFileSystemSave = 1;
-        return; 
+        return;
     }
     error((char *)"Syntax");
 }
@@ -737,12 +737,12 @@ void MIPS16 cmd_flash(void)
         disable_interrupts_pico();
         flash_range_erase(j, RoundUpK4(fsize));
         enable_interrupts_pico();
-        while(!FileEOF(fnbr)) { 
+        while(!FileEOF(fnbr)) {
             memset(r,0,256) ;
             for(int i=0;i<256;i++) {
                 if(FileEOF(fnbr))break;
                 r[i] = FileGetChar(fnbr);
-            }  
+            }
             disable_interrupts_pico();
             flash_range_program(j, (uint8_t *)r, 256);
             enable_interrupts_pico();
@@ -889,7 +889,7 @@ void MIPS16 cmd_flash(void)
     else
         error("Syntax");
 }
-/* 
+/*
  * @cond
  * The following section will be excluded from the documentation.
  */
@@ -955,7 +955,7 @@ void cmd_LoadImage(unsigned char *p)
     if (Option.Refresh)
         Display_Refresh();
 }
-/* 
+/*
  * @cond
  * The following section will be excluded from the documentation.
  */
@@ -1254,7 +1254,7 @@ void fun_dir(void)
             } else {
                 FSerror=lfs_dir_read(&lfs, &lfs_dir_dir, &lfs_info_dir);
                 strcpy(fnod.fname,lfs_info_dir.name);
-                if(FSerror==0)                    
+                if(FSerror==0)
                     break;
                 if (lfs_info_dir.type==LFS_TYPE_DIR && pattern_matching(pp, lfs_info_dir.name, 0, 0) && !(strcmp(lfs_info_dir.name,".")==0 || strcmp(lfs_info_dir.name,"..")==0 )){
                     break;
@@ -1275,7 +1275,7 @@ void fun_dir(void)
             } else {
                 FSerror=lfs_dir_read(&lfs, &lfs_dir_dir, &lfs_info_dir);
                 strcpy(fnod.fname,lfs_info_dir.name);
-                if(FSerror==0)                    
+                if(FSerror==0)
                     break;
                 if (lfs_info_dir.type==LFS_TYPE_REG && pattern_matching(pp, lfs_info_dir.name, 0, 0)){
                     break;
@@ -1296,7 +1296,7 @@ void fun_dir(void)
             } else {
                 FSerror=lfs_dir_read(&lfs, &lfs_dir_dir, &lfs_info_dir);
                 strcpy(fnod.fname,lfs_info_dir.name);
-                if(FSerror==0)                    
+                if(FSerror==0)
                     break;
                 if (lfs_info_dir.type & (LFS_TYPE_REG |  LFS_TYPE_DIR) && pattern_matching(pp, lfs_info_dir.name, 0, 0) && !(strcmp(lfs_info_dir.name,".")==0 || strcmp(lfs_info_dir.name,"..")==0 )){
                     break;
@@ -1354,7 +1354,7 @@ void MIPS16 cmd_rmdir(void)
         ErrorCheck(0);
     }
 }
-/* 
+/*
  * @cond
  * The following section will be excluded from the documentation.
  */
@@ -1481,7 +1481,7 @@ void MIPS16 cmd_kill(void)
                 if(i=='N'){
                     PRet();
                     FatFSFileSystem=localsave;
-                    return;     
+                    return;
                 }
             }
             PRet();
@@ -1489,7 +1489,7 @@ void MIPS16 cmd_kill(void)
         if(fromfilesystem==0) FSerror=lfs_dir_open(&lfs, &lfs_dir, fromdir);
         else FSerror = f_findfirst(&djd, &fnod, fromdir, pp);
         ErrorCheck(0);
-        
+
 
         if(fromfilesystem){
             while (FSerror == FR_OK && fnod.fname[0])
@@ -1520,7 +1520,7 @@ void MIPS16 cmd_kill(void)
                         }
                 }
             FSerror = f_findnext(&djd, &fnod);
-            } 
+            }
         } else {
             while(1){
                 int found=0;
@@ -1579,7 +1579,7 @@ void MIPS16 cmd_kill(void)
         FatFSFileSystem=FatFSFileSystemSave;
     }
 }
-/* 
+/*
  * @cond
  * The following section will be excluded from the documentation.
  */
@@ -1709,7 +1709,7 @@ void MIPS16 cmd_save(void)
             255,255,0,0,
             255,255,255,0
         };
-        
+
 //        unsigned char bmppad[3] = {0, 0, 0};
         getargs(&p, 9, (unsigned char *)",");
         if (!InitSDCard())
@@ -1762,12 +1762,12 @@ void MIPS16 cmd_save(void)
             f_write(FileTable[fnbr].fptr, bmpinfoheader, 40, &nbr);
             f_write(FileTable[fnbr].fptr, bmpcolourpallette, 64, &nbr);
         } else {
-            FSerror=lfs_file_write(&lfs, FileTable[fnbr].lfsptr, bmpfileheader, 14); 
+            FSerror=lfs_file_write(&lfs, FileTable[fnbr].lfsptr, bmpfileheader, 14);
             if(FSerror>0)FSerror=0;
             ErrorCheck(fnbr);
-            FSerror=lfs_file_write(&lfs, FileTable[fnbr].lfsptr, bmpinfoheader, 40); 
+            FSerror=lfs_file_write(&lfs, FileTable[fnbr].lfsptr, bmpinfoheader, 40);
             if(FSerror>0)FSerror=0;
-            FSerror=lfs_file_write(&lfs, FileTable[fnbr].lfsptr, bmpcolourpallette, 64); 
+            FSerror=lfs_file_write(&lfs, FileTable[fnbr].lfsptr, bmpcolourpallette, 64);
             if(FSerror>0)FSerror=0;
             ErrorCheck(fnbr);
         }
@@ -1812,11 +1812,11 @@ void MIPS16 cmd_save(void)
             *ppp++=0;*ppp++=0;count+=2;
             if(filesource[fnbr]==FATFSFILE) f_write(FileTable[fnbr].fptr, foutbuf, count, &nbr);
             else {
-                    FSerror=lfs_file_write(&lfs, FileTable[fnbr].lfsptr, foutbuf, count); 
+                    FSerror=lfs_file_write(&lfs, FileTable[fnbr].lfsptr, foutbuf, count);
             }
             if(FSerror>0)FSerror=0;
             ErrorCheck(fnbr);
-            
+
         }
 #ifdef PICOMITEVGA
         mergedread=0;
@@ -1824,7 +1824,7 @@ void MIPS16 cmd_save(void)
         foutbuf[0]=0;foutbuf[1]=1;
         if(filesource[fnbr]==FATFSFILE) f_write(FileTable[fnbr].fptr, foutbuf, 2, &nbr);
         else {
-                FSerror=lfs_file_write(&lfs, FileTable[fnbr].lfsptr, foutbuf, 2); 
+                FSerror=lfs_file_write(&lfs, FileTable[fnbr].lfsptr, foutbuf, 2);
         }
         if(FSerror>0)FSerror=0;
         ErrorCheck(fnbr);
@@ -1865,7 +1865,7 @@ void MIPS16 cmd_save(void)
 	            255,255,0,0,
 	            255,255,255,0
 	        };
-	        
+
 	        unsigned char bmppad[3] = {0, 0, 0};
 	        getargs(&p, 9, (unsigned char *)",");
 	        if (!InitSDCard())
@@ -1898,7 +1898,7 @@ void MIPS16 cmd_save(void)
 	        bmpfileheader[3] = (unsigned char)(filesize >> 8);
 	        bmpfileheader[4] = (unsigned char)(filesize >> 16);
 	        bmpfileheader[5] = (unsigned char)(filesize >> 24);
-	
+
 	        bmpinfoheader[4] = (unsigned char)(w);
 	        bmpinfoheader[5] = (unsigned char)(w >> 8);
 	        bmpinfoheader[6] = (unsigned char)(w >> 16);
@@ -1911,18 +1911,18 @@ void MIPS16 cmd_save(void)
 	        bmpinfoheader[21] = (unsigned char)((h*w/2) >> 8);
 	        bmpinfoheader[22] = (unsigned char)((h*w/2) >> 16);
 	        bmpinfoheader[23] = (unsigned char)((h*w/2) >> 24);
-	
+
 	        if(filesource[fnbr]==FATFSFILE) {
 	            f_write(FileTable[fnbr].fptr, bmpfileheader, 14, &nbr);
 	            f_write(FileTable[fnbr].fptr, bmpinfoheader, 40, &nbr);
 	            f_write(FileTable[fnbr].fptr, bmpcolourpallette, 64, &nbr);
 	        } else {
-	            FSerror=lfs_file_write(&lfs, FileTable[fnbr].lfsptr, bmpfileheader, 14); 
+	            FSerror=lfs_file_write(&lfs, FileTable[fnbr].lfsptr, bmpfileheader, 14);
 	            if(FSerror>0)FSerror=0;
 	            ErrorCheck(fnbr);
-	            FSerror=lfs_file_write(&lfs, FileTable[fnbr].lfsptr, bmpinfoheader, 40); 
+	            FSerror=lfs_file_write(&lfs, FileTable[fnbr].lfsptr, bmpinfoheader, 40);
 	            if(FSerror>0)FSerror=0;
-	            FSerror=lfs_file_write(&lfs, FileTable[fnbr].lfsptr, bmpcolourpallette, 64); 
+	            FSerror=lfs_file_write(&lfs, FileTable[fnbr].lfsptr, bmpcolourpallette, 64);
 	            if(FSerror>0)FSerror=0;
 	            ErrorCheck(fnbr);
 	        }
@@ -1950,14 +1950,14 @@ void MIPS16 cmd_save(void)
 	            }
 	            if(filesource[fnbr]==FATFSFILE) f_write(FileTable[fnbr].fptr, outbuf, w / 2, &nbr);
 	            else {
-	                    FSerror=lfs_file_write(&lfs, FileTable[fnbr].lfsptr, outbuf, w /2); 
+	                    FSerror=lfs_file_write(&lfs, FileTable[fnbr].lfsptr, outbuf, w /2);
 	            }
 	            if(FSerror>0)FSerror=0;
 	            ErrorCheck(fnbr);
 	            if ((w / 2) % 4 != 0){
 	                if(filesource[fnbr]==FATFSFILE)f_write(FileTable[fnbr].fptr, bmppad, 4 - ((w / 2 ) % 4), &nbr);
 	                else {
-	                    FSerror=lfs_file_write(&lfs, FileTable[fnbr].lfsptr, bmppad, 4 - ((w / 2 ) % 4)); 
+	                    FSerror=lfs_file_write(&lfs, FileTable[fnbr].lfsptr, bmppad, 4 - ((w / 2 ) % 4));
 	                }
 	                if(FSerror>0)FSerror=0;
 	                ErrorCheck(fnbr);
@@ -2019,10 +2019,10 @@ void MIPS16 cmd_save(void)
             f_write(FileTable[fnbr].fptr, bmpfileheader, 14, &nbr);
             f_write(FileTable[fnbr].fptr, bmpinfoheader, 40, &nbr);
         } else {
-            FSerror=lfs_file_write(&lfs, FileTable[fnbr].lfsptr, bmpfileheader, 14); 
+            FSerror=lfs_file_write(&lfs, FileTable[fnbr].lfsptr, bmpfileheader, 14);
             if(FSerror>0)FSerror=0;
             ErrorCheck(fnbr);
-            FSerror=lfs_file_write(&lfs, FileTable[fnbr].lfsptr, bmpinfoheader, 40); 
+            FSerror=lfs_file_write(&lfs, FileTable[fnbr].lfsptr, bmpinfoheader, 40);
             if(FSerror>0)FSerror=0;
             ErrorCheck(fnbr);
         }
@@ -2032,14 +2032,14 @@ void MIPS16 cmd_save(void)
             ReadBuffer(x, i, x + w - 1, i, flinebuf);
             if(filesource[fnbr]==FATFSFILE) f_write(FileTable[fnbr].fptr, flinebuf, w * 3, &nbr);
             else {
-                    FSerror=lfs_file_write(&lfs, FileTable[fnbr].lfsptr, flinebuf, w * 3); 
+                    FSerror=lfs_file_write(&lfs, FileTable[fnbr].lfsptr, flinebuf, w * 3);
                     if(FSerror>0)FSerror=0;
                     ErrorCheck(fnbr);
             }
             if ((w * 3) % 4 != 0){
                 if(filesource[fnbr]==FATFSFILE)f_write(FileTable[fnbr].fptr, bmppad, 4 - ((w * 3) % 4), &nbr);
                 else {
-                    FSerror=lfs_file_write(&lfs, FileTable[fnbr].lfsptr, bmppad, 4 - ((w * 3) % 4)); 
+                    FSerror=lfs_file_write(&lfs, FileTable[fnbr].lfsptr, bmppad, 4 - ((w * 3) % 4));
                     if(FSerror>0)FSerror=0;
                     ErrorCheck(fnbr);
                 }
@@ -2073,7 +2073,7 @@ void MIPS16 cmd_save(void)
         FileClose(fnbr);
     }
 }
-/* 
+/*
  * @cond
  * The following section will be excluded from the documentation.
  */
@@ -2424,7 +2424,7 @@ int FileLoadCMM2Program(char *fname, bool message) {
     FileClose(fnbr);
     unsigned char continuation=Option.continuation;
     SaveProgramToFlash((unsigned char *)buf, false);
-    Option.continuation= continuation;   
+    Option.continuation= continuation;
     FreeMemorySafe((void **)&buf);
     FreeMemorySafe((void **)&dlist);
     return true;
@@ -2533,7 +2533,7 @@ void MIPS16 SaveProgramToRAM(unsigned char *pm, int msg, uint8_t *ram) {
     initFonts();
 #ifdef USBKEYBOARD
 	clearrepeat();
-#endif	
+#endif
     memcpy(buf, tknbuf, STRINGSIZE);                                // save the token buffer because we are going to use it
     memset(ram,0xFF,MAX_PROG_SIZE);
     realmempointer=(volatile uint32_t)ram;
@@ -2623,10 +2623,10 @@ void MIPS16 SaveProgramToRAM(unsigned char *pm, int msg, uint8_t *ram) {
              realmempointer+=4;
              p++;
              skipspace(p);
-             if(!fontnbr) { //process CSub 
+             if(!fontnbr) { //process CSub
                  if(!isnamestart((uint8_t)*p)){
                     error("Function name");
-                 }  
+                 }
                  do { p++; } while(isnamechar((uint8_t)*p));
                  skipspace(p);
                  if(!(isxdigit((uint8_t)p[0]) && isxdigit((uint8_t)p[1]) && isxdigit((uint8_t)p[2]))) {
@@ -2718,10 +2718,10 @@ void MIPS16 SaveProgramToRAM(unsigned char *pm, int msg, uint8_t *ram) {
              //FlashWriteWord(fontnbr - 1);                        // a low number (< FONT_TABLE_SIZE) marks the entry as a font
              // B31 = 1 now marks entry as font.
              MemWriteByte(fontnbr - 1);
-             MemWriteByte(0x00);  
              MemWriteByte(0x00);
-             MemWriteByte(0x80);    
-           
+             MemWriteByte(0x00);
+             MemWriteByte(0x80);
+
 
              skipelement(p);                                     // go to the end of the command
              p--;
@@ -2903,7 +2903,7 @@ void MIPS16 cmd_loadCMM2(void){
     }
     else if (CurrentLinePtr != NULL)
         error("Invalid in a program");
-    
+
     loadCMM2(argv[0],autorun,true);
 }
 
@@ -3061,7 +3061,7 @@ void MIPS16 cmd_load(void)
     SetFont(oldfont);
     PromptFont=oldfont;
 }
-/* 
+/*
  * @cond
  * The following section will be excluded from the documentation.
  */
@@ -3198,7 +3198,7 @@ int ForceFileClose(int fnbr)
     int type=NONEFILE;
     if (fnbr && FileTable[fnbr].fptr != NULL && filesource[fnbr]==FATFSFILE)
     {
-        
+
         FSerror = f_close(FileTable[fnbr].fptr);
         FreeMemory((void *)FileTable[fnbr].fptr);
         FreeMemory((void *)SDbuffer[fnbr]);
@@ -3437,7 +3437,7 @@ void B2A(unsigned char *fromfile, unsigned char *tofile){
     {
         FSerror = f_read(FileTable[fnbr1].fptr, buff, 512, &nbr);
         ErrorCheck(fnbr1);
-        FSerror=lfs_file_write(&lfs, FileTable[fnbr2].lfsptr, buff, nbr); 
+        FSerror=lfs_file_write(&lfs, FileTable[fnbr2].lfsptr, buff, nbr);
         if(FSerror>0)FSerror=0;
         ErrorCheck(fnbr2);
 
@@ -3462,7 +3462,7 @@ void A2B(unsigned char *fromfile, unsigned char *tofile){
     while (!(lfs_file_tell(&lfs,FileTable[fnbr1].lfsptr)==lfs_file_size(&lfs,FileTable[fnbr1].lfsptr)))
     {
         nbr=lfs_file_read(&lfs, FileTable[fnbr1].lfsptr, buff, 512);
-        if(nbr<0)FSerror=nbr;	
+        if(nbr<0)FSerror=nbr;
         ErrorCheck(fnbr1);
         FSerror = f_write(FileTable[fnbr2].fptr, buff, nbr, &bw);
         ErrorCheck(fnbr2);
@@ -3511,9 +3511,9 @@ void A2A(unsigned char *fromfile, unsigned char *tofile){
     while (!(lfs_file_tell(&lfs,FileTable[fnbr1].lfsptr)==lfs_file_size(&lfs,FileTable[fnbr1].lfsptr)))
     {
         nbr=lfs_file_read(&lfs, FileTable[fnbr1].lfsptr, buff, 512);
-        if(nbr<0)FSerror=nbr;	
+        if(nbr<0)FSerror=nbr;
         ErrorCheck(fnbr1);
-        FSerror=lfs_file_write(&lfs, FileTable[fnbr2].lfsptr, buff, nbr); 
+        FSerror=lfs_file_write(&lfs, FileTable[fnbr2].lfsptr, buff, nbr);
         if(FSerror>0)FSerror=0;
         ErrorCheck(fnbr2);
     }
@@ -3564,7 +3564,7 @@ void MIPS16 cmd_copy(void)
         tofile = getFstring(argv[2]);
         B2A(fromfile,tofile);
         return;
-    }        
+    }
     tp = checkstring(cmdline, (unsigned char *)"A2B");
     if(tp){
         getargs(&tp, 3, (unsigned char *)ss);
@@ -3592,7 +3592,7 @@ void MIPS16 cmd_copy(void)
         B2B(fromfile,tofile);
         return;
     }
-    
+
     getargs(&p, 3, (unsigned char *)ss);
     if (argc != 3) error("Syntax");
     fromfile = getFstring(argv[0]);
@@ -3609,7 +3609,7 @@ void MIPS16 cmd_copy(void)
         if(!(ExistsDir((char *)tofile, todir, &tofilesystem))){
             FatFSFileSystem=localsave;
             error("$ not a directory",tofile);
-        } 
+        }
         int waste=0, t=FatFSFileSystem+1;
         t = drivecheck((char *)getFstring(argv[0]),&waste);
         argv[0]+=waste;
@@ -3687,7 +3687,7 @@ void MIPS16 cmd_copy(void)
                     else if(fromfilesystem==0 && tofilesystem==1)A2B(in,out);
                 }
             FSerror = f_findnext(&djd, &fnod);
-            } 
+            }
         } else {
             while(1){
                 int found=0;
@@ -3743,8 +3743,8 @@ void MIPS16 cmd_copy(void)
         return;
     }
     FatFSFileSystem=FatFSFileSystemSave;
-} 
-/* 
+}
+/*
  * @cond
  * The following section will be excluded from the documentation.
  */
@@ -4101,7 +4101,7 @@ void MIPS16 cmd_files(void)
                     fcnt++;
                 }
             FSerror = f_findnext(&djd, &fnod);
-            } 
+            }
         } else {
             while(1){
             #ifdef PICOMITEWEB
@@ -4350,7 +4350,7 @@ void MIPS16 cmd_files(void)
 //        longjmp(mark, 1);
 
 }
-/* 
+/*
  * @cond
  * The following section will be excluded from the documentation.
  */
@@ -4417,7 +4417,7 @@ int check_line_length(const char *text ,int *linein) {
             // Increase length for this segment of the line
             current_length++;
         }
-        
+
         ptr++;
     }
 
@@ -4515,7 +4515,7 @@ readin:;
           //    ClearSavedVars();                                               // clear any saved variables
     SaveProgramToFlash(buf, true);
     ClearSavedVars(); // clear any saved variables
-    ClearTempMemory(); 
+    ClearTempMemory();
  #ifdef PICOMITEWEB
         if(TCPstate){
             for(int i=0;i<MaxPcb;i++)TCPstate->buffer_recv[i]=GetMemory(TCP_READ_BUFFER_SIZE);
@@ -4623,7 +4623,7 @@ void cmd_autosave(void)
         if(j>255)error("line % is % characters long, maximum is 255",i,j);
         SaveProgramToFlash(buf, true);
         ClearSavedVars(); // clear any saved variables
-        ClearTempMemory(); 
+        ClearTempMemory();
 #ifdef PICOMITEWEB
             if(TCPstate){
                 for(int i=0;i<MaxPcb;i++)TCPstate->buffer_recv[i]=GetMemory(TCP_READ_BUFFER_SIZE);
@@ -4639,7 +4639,7 @@ void cmd_autosave(void)
         }
 //    }
 }*/
-/* 
+/*
  * @cond
  * The following section will be excluded from the documentation.
  */
@@ -4949,7 +4949,7 @@ void cmd_close(void)
         }
     }
 }
-/* 
+/*
  * @cond
  * The following section will be excluded from the documentation.
  */
@@ -5045,6 +5045,32 @@ void LoadOptions(void)
 #endif
 }
 
+#define JEDEC_READ_ID 0x9F
+#define PICOCALC_BL_MAGIC 0xe98cc638
+
+uint32_t GetFlashSize(void)
+{
+    uint32_t flash_size;
+
+    uint8_t txbuf[4] = {JEDEC_READ_ID};
+    uint8_t rxbuf[4] = {0};
+
+    disable_interrupts_pico();
+    flash_do_cmd(txbuf, rxbuf, 4);
+    flash_size = 1 << rxbuf[3];
+    enable_interrupts_pico();
+
+    uint32_t *picocalc_bl_info = (uint32_t*)(XIP_BASE + flash_size - sizeof(uint32_t)*2);
+
+    if (picocalc_bl_info[0] == PICOCALC_BL_MAGIC)
+    {
+        // picocalc highmem uf2 loader detected; return the size of the application area
+        return picocalc_bl_info[1] - XIP_BASE;
+    }
+
+    return flash_size;
+}
+
 void ResetOptions(bool startup)
 {
     if(!startup){
@@ -5080,7 +5106,7 @@ void ResetOptions(bool startup)
         Option.USBKeyboard = CONFIG_US;
         Option.RepeatStart=600;
         Option.RepeatRate=150;
-        Option.SerialConsole = 2; 
+        Option.SerialConsole = 2;
         Option.SerialTX = 11;
         Option.SerialRX = 12;
         Option.capslock=0;
@@ -5106,7 +5132,7 @@ void ResetOptions(bool startup)
         Option.USBKeyboard = CONFIG_US;
         Option.RepeatStart=600;
         Option.RepeatRate=150;
-        Option.SerialConsole = 2; 
+        Option.SerialConsole = 2;
         Option.SerialTX = 11;
         Option.SerialRX = 12;
         Option.capslock=0;
@@ -5140,8 +5166,6 @@ void ResetOptions(bool startup)
     Option.repeat = 0b101100;
     Option.VGA_HSYNC=21;
     Option.VGA_BLUE=24;
-    uint8_t txbuf[4] = {0x9f};
-    uint8_t rxbuf[4] = {0};
     Option.heartbeatpin = 43;
 #ifdef rp2350
     if(!rp2350a){
@@ -5149,10 +5173,7 @@ void ResetOptions(bool startup)
         Option.AllPins=1;
     }
 #endif
-    disable_interrupts_pico();
-    flash_do_cmd(txbuf, rxbuf, 4);
-    Option.FlashSize= 1 << rxbuf[3];
-    enable_interrupts_pico();
+    Option.FlashSize = GetFlashSize();
     SaveOptions();
     uSec(250000);
 }
@@ -5184,8 +5205,8 @@ void FlashWriteInit(int region)
     else if (region == SAVED_VARS_FLASH)
         realflashpointer = (uint32_t)(FLASH_TARGET_OFFSET + FLASH_ERASE_SIZE);
     else if (region == LIBRARY_FLASH)
-        realflashpointer = (uint32_t)(PROGSTART - MAX_PROG_SIZE);  //i.e the last slot  
-    else 
+        realflashpointer = (uint32_t)(PROGSTART - MAX_PROG_SIZE);  //i.e the last slot
+    else
         realflashpointer = (uint32_t)PROGSTART - MAX_PROG_SIZE*(MAXFLASHSLOTS-region+1);
     disable_interrupts_pico();
 }
@@ -5469,7 +5490,7 @@ void MIPS16 cmd_var(void)
     }
     error("Unknown command");
 }
-/* 
+/*
  * @cond
  * The following section will be excluded from the documentation.
  */
