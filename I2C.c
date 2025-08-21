@@ -568,6 +568,11 @@ void CheckI2CKeyboard(int noerror, int read) {
           realc=ESC; break;
         case 0x0a:
           realc=ENTER; break;
+        // --- This will only work when using the custom BIOS at:
+        //     https://github.com/shtirlic/picocalc_southbridge
+        //     Official BIOS (currently 1.4) does not support this key.
+        case 0x91:
+          realc=USB_HID_KEYBOARD_KEYPAD_KEYBOARD_POWER; break; // 0x66
         // --- Modifier keys must be consumed and ignored!
         case 0xa2: // Shift (left)
         case 0xa3: // Shift (right)
