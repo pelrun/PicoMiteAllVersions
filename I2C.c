@@ -572,7 +572,7 @@ void CheckI2CKeyboard(int noerror, int read) {
         //     https://github.com/shtirlic/picocalc_southbridge
         //     Official BIOS (currently 1.4) does not support this key.
         case 0x91:
-          realc=USB_HID_KEYBOARD_KEYPAD_KEYBOARD_POWER; break; // 0x66
+          realc=0x66; break; // USB_HID_KEYBOARD_KEYPAD_KEYBOARD_POWER
         // --- Modifier keys must be consumed and ignored!
         case 0xa2: // Shift (left)
         case 0xa3: // Shift (right)
