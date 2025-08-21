@@ -39,7 +39,6 @@ set(CMAKE_CXX_STANDARD 17)
 pico_sdk_init()
 add_executable(PicoMite
 	PicoMite.c
-	Memory.c
 	regex.c 
 	MMBasic.c
 	Operators.c
@@ -72,7 +71,11 @@ add_executable(PicoMite
 	hxcmod.c
     VS1053.c
 	aes.c
+	Memory.c
 )
+if (COMPILE STREQUAL "HDMI" OR COMPILE STREQUAL "WEBRP2350" OR COMPILE STREQUAL "HDMIUSB"  OR COMPILE STREQUAL "VGARP2350"  OR COMPILE STREQUAL "VGAUSBRP2350"  OR COMPILE STREQUAL "PICORP2350"  OR COMPILE STREQUAL "PICOUSBRP2350" )
+    target_sources(PicoMite PRIVATE psram.c)
+endif()
 if (COMPILE STREQUAL "WEB" OR COMPILE STREQUAL "WEBRP2350" )
     target_sources(PicoMite PRIVATE 
 	SSD1963.c 
@@ -195,7 +198,7 @@ endif()
 # all VGA variants 
 if (COMPILE STREQUAL "VGA" OR COMPILE STREQUAL "VGAUSB" OR COMPILE STREQUAL "VGARP2350" OR COMPILE STREQUAL "VGAUSBRP2350")
 target_compile_options(PicoMite PRIVATE -DPICOMITEVGA
-										-DPICO_HEAP_SIZE=0x2000 
+										-DPICO_HEAP_SIZE=0x1000 
 										-DPICO_CORE0_STACK_SIZE=0x2000
 										)
 endif()
@@ -210,8 +213,7 @@ endif()
 #Web variants need more heap
 if(COMPILE STREQUAL "WEB" OR COMPILE STREQUAL "WEBRP2350")
 	target_compile_options(PicoMite PRIVATE -DPICOMITEWEB 
-											-DPICO_HEAP_SIZE=0x4000 
-											-DGUICONTROLS
+											-DPICO_HEAP_SIZE=0x3000 
 											-DCYW43_HOST_NAME="WebMite" 
 											-DPICO_CYW43_ARCH_POLL
 											-DPICO_CORE0_STACK_SIZE=0x4000

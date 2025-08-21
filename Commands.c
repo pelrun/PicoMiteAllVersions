@@ -127,7 +127,7 @@ void __not_in_flash_func(cmd_null)(void) {
 #ifdef rp2350
 void MIPS16 __not_in_flash_func(cmd_inc)(void){
 #else
-#ifdef PICOMITEVGA
+#if defined(PICOMITEVGA) || (defined(PICOMITEWEB) && !defined(rp2350))
 void MIPS16 cmd_inc(void){
 #else
 void MIPS16 __not_in_flash_func(cmd_inc)(void){
@@ -749,6 +749,8 @@ void MIPS16 cmd_list(void) {
         	ListProgram(ProgMemory, true);
         	checkend(p);
         }
+	} else if((p = checkstring(cmdline, (unsigned char *)"OPTIONS"))) {
+		printoptions();
 	} else if((p = checkstring(cmdline, (unsigned char *)"VARIABLES"))) {
 		int count=0;
 		int64_t *dest=NULL;
@@ -1411,6 +1413,9 @@ if(Option.SerialConsole)while(ConsoleTxBufHead!=ConsoleTxBufTail)routinechecks()
 #endif
 #ifndef USBKEYBOARD
     if(mouse0==false && Option.MOUSE_CLOCK)initMouse0(0);  //see if there is a mouse to initialise 
+#endif
+#if defined(PICOMITE) && defined(rp2350)
+	if(Option.DISPLAY_TYPE>=NEXTGEN)Option.Refresh=1;
 #endif
 }
 void cmd_end(void) {
@@ -3362,7 +3367,7 @@ void MIPS16 cmd_dim(void) {
                 if(tv != NULL) error("$ already declared", argv[i]);
                 tv = findvar(argv[i], typeSave | V_LOCAL | V_FIND | V_DIM_VAR);         			// create the variable
                 if(g_vartbl[VIndexSave].dims[0] > 0 || (g_vartbl[VIndexSave].type & T_STR)) {
-                    FreeMemory(tv);                                                                 // we don't need the memory allocated to the local
+                    FreeMemorySafe((void **)&tv);                                                                 // we don't need the memory allocated to the local
                     g_vartbl[g_VarIndex].val.s = g_vartbl[VIndexSave].val.s;                              // point to the memory of the global variable
                 } else
                     g_vartbl[g_VarIndex].val.ia = &(g_vartbl[VIndexSave].val.i);                    		// point to the data of the variable

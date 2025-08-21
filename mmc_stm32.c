@@ -66,6 +66,9 @@ int SPISpeed=0xFF;
 //#define SPI_CLK_PIN Option.SYSTEM_CLK
 //define SPI_MISO_PIN Option.SYSTEM_MISO
 uint16_t SPI_CLK_PIN,SPI_MOSI_PIN,SPI_MISO_PIN;
+#if defined(PICOMITE) && defined(rp2350)
+uint16_t LCD_CLK_PIN,LCD_MOSI_PIN,LCD_MISO_PIN;
+#endif
 uint16_t SD_CLK_PIN,SD_MOSI_PIN,SD_MISO_PIN, SD_CS_PIN;
 uint16_t AUDIO_CLK_PIN,AUDIO_MOSI_PIN,AUDIO_MISO_PIN, AUDIO_CS_PIN, AUDIO_RESET_PIN, AUDIO_DREQ_PIN, AUDIO_DCS_PIN, AUDIO_LDAC_PIN;
 uint16_t AUDIO_L_PIN, AUDIO_R_PIN, AUDIO_SLICE;
@@ -87,6 +90,11 @@ BYTE (*xchg_byte)(BYTE data_out)= NULL;
 void (*xmit_byte_multi)(const BYTE *buff, int cnt)= NULL;
 void (*rcvr_byte_multi)(BYTE *buff, int cnt)= NULL;
 int (*SET_SPI_CLK)(int speed, int polarity, int edge)=NULL;
+#if defined(PICOMITE) && defined(rp2350)
+void (*lcd_xmit_byte_multi)(const BYTE *buff, int cnt)= NULL;
+void (*lcd_rcvr_byte_multi)(BYTE *buff, int cnt)= NULL;
+int (*LCD_SET_SPI_CLK)(int speed, int polarity, int edge)=NULL;
+#endif
 extern const uint8_t PINMAP[];
 const int mapping[101]={
 	0,4,11,18,25,33,41,49,57,66,75,
@@ -106,6 +114,10 @@ uint8_t SPI0locked=0;
 uint8_t SPI1locked=0;
 int BacklightSlice=-1;
 int BacklightChannel=-1;
+#if defined(PICOMITE) && defined(rp2350)
+int KeyboardlightSlice=-1;
+int KeyboardlightChannel=-1;
+#endif
 extern const unsigned short whitenoise[2];
 uint16_t AUDIO_SPI;
 volatile uint16_t VSbuffer=0;
@@ -253,7 +265,7 @@ void MIPS16 __not_in_flash_func(on_pwm_wrap)(void) {
 				}
 			}
 			return;
-		} else if(CurrentlyPlaying == P_WAV  || CurrentlyPlaying == P_FLAC  || CurrentlyPlaying == P_MOD  || CurrentlyPlaying == P_MP3) {
+		} else if(CurrentlyPlaying == P_WAV  || CurrentlyPlaying == P_FLAC  || CurrentlyPlaying == P_MOD  || CurrentlyPlaying == P_MP3  || CurrentlyPlaying == P_ARRAY) {
 			while((pioi2s->flevel & (0xf<<(i2ssm*8))) < (0x6<<(i2ssm*8))){
 				if(--repeatcount){
 					pio_sm_put(pioi2s, i2ssm, left);
@@ -364,7 +376,7 @@ void MIPS16 __not_in_flash_func(on_pwm_wrap)(void) {
 			VSbuffer=VS1053free();
 			if(VSbuffer>1023-(CurrentlyPlaying == P_STREAM ? sendstream :sendcount))return;
 		}
-    	if(CurrentlyPlaying == P_FLAC || CurrentlyPlaying == P_WAV ||CurrentlyPlaying == P_MP3 || CurrentlyPlaying == P_MIDI || CurrentlyPlaying==P_MOD) {
+    	if(CurrentlyPlaying == P_FLAC || CurrentlyPlaying == P_WAV ||CurrentlyPlaying == P_MP3 || CurrentlyPlaying == P_MIDI || CurrentlyPlaying==P_ARRAY || CurrentlyPlaying==P_MOD) {
 			if(bcount[1]==0 && bcount[2]==0 && playreadcomplete==1){
 //				pwm_set_irq_enabled(AUDIO_SLICE, false);
 				return;
@@ -488,7 +500,7 @@ void MIPS16 __not_in_flash_func(on_pwm_wrap)(void) {
 					if(PhaseAC_right>=4096.0)PhaseAC_right-=4096.0;
 				}
 			}
-		} else if(CurrentlyPlaying == P_WAV  || CurrentlyPlaying == P_FLAC  || CurrentlyPlaying == P_MOD  || CurrentlyPlaying == P_MP3) {
+		} else if(CurrentlyPlaying == P_WAV  || CurrentlyPlaying == P_FLAC  || CurrentlyPlaying == P_MOD   || CurrentlyPlaying==P_ARRAY || CurrentlyPlaying == P_MP3) {
 			if(--repeatcount)return;
 			repeatcount=audiorepeat;
 			if(bcount[1]==0 && bcount[2]==0 && playreadcomplete==1){
@@ -953,12 +965,6 @@ BYTE __not_in_flash_func(send_cmd)(
 		command[3]=(arg >> 8);		// Argument[15..8]
 		command[4]=(arg);			// Argument[7..0]
 		command[5]=(CRC7(command, 5)<<1) | 1;
-/*		xchg_byte(command[0]);			// Start + Command index 
-		xchg_byte(command[1]);	// Argument[31..24] 
-		xchg_byte(command[2]);	// Argument[23..16] 
-		xchg_byte(command[3]);		// Argument[15..8] 
-		xchg_byte(command[4]);			// Argument[7..0] 
-		xchg_byte(command[5]);*/
 		xmit_byte_multi(command,6);
 	/* Receive command response */
 	if (cmd == CMD12) xchg_byte(0xFF);	/* Skip a stuff byte on stop to read */
@@ -992,26 +998,6 @@ DSTATUS disk_status (
 	return SDCardStat;
 }
 
-/*int CMD0send(void){
-    char response,trys=100, responsetrys=10;
-    do {
-    	deselect();
-		gpio_put(SD_CS_PIN,GPIO_PIN_RESET);
-		asm("NOP");asm("NOP");asm("NOP");
-        trys--;
-        xchg_byte(0x40);
-        xchg_byte(0x0);
-        xchg_byte(0x0);
-        xchg_byte(0x0);
-        xchg_byte(0x0);
-        xchg_byte(0x95);
-        do{
-            response=xchg_byte(0xFF);
-            responsetrys--;
-        } while((responsetrys !=0) && (response !=1));
-    } while((trys !=0) && (response !=1));
-    return response;
-}*/
 
 /*-----------------------------------------------------------------------*/
 /* Initialize Disk Drive                                                 */
@@ -1414,7 +1400,7 @@ void setpwm(int pin, int *PWMChannel, int *PWMSlice, MMFLOAT frequency, MMFLOAT 
 		}
 	}
 	#endif
-	
+
 	if(slice==0){
 		pwm_set_enabled(slice, true);
 	}
@@ -1461,7 +1447,7 @@ void dobacklight(void){
 	if(Option.DISPLAY_BL){
 		ExtCfg(Option.DISPLAY_BL, EXT_BOOT_RESERVED, 0);
 		int pin=Option.DISPLAY_BL;
-		setpwm(pin, &BacklightChannel, &BacklightSlice, Option.DISPLAY_TYPE==ILI9488W ? 1000.0 : 50000.0, Option.DefaultBrightness);
+		setpwm(pin, &BacklightChannel, &BacklightSlice, Option.DISPLAY_TYPE==ILI9488W ? 1000.0 : 50000.0, Option.BackLightLevel);
 	}
 }
 void InitReservedIO(void) {
@@ -1469,6 +1455,19 @@ void InitReservedIO(void) {
 	if(Option.PSRAM_CS_PIN){
 		ExtCfg(Option.PSRAM_CS_PIN, EXT_BOOT_RESERVED, 0);
 	}
+#if defined(PICOMITE)
+	if(Option.LOCAL_KEYBOARD){
+		ExtCfg(PINMAP[47],EXT_ANA_IN,0);
+		ExtCfg(PINMAP[47], EXT_BOOT_RESERVED, 0);
+		ExtCfg(PINMAP[24],EXT_DIG_OUT,0);
+		ExtCfg(PINMAP[24], EXT_BOOT_RESERVED, 0);
+//		setpwm(PINMAP[41], &KeyboardlightChannel, &KeyboardlightSlice, 50000.0, Option.KeyboardBrightness);
+		for(int i=26;i<41;i++){
+			ExtCfg(PINMAP[i], EXT_DIG_IN, ODCSET);
+			ExtCfg(PINMAP[i], EXT_BOOT_RESERVED, 0);
+		}
+	}
+#endif
 #endif
 #ifdef PICOMITEVGA
 #ifndef HDMI
@@ -1592,6 +1591,40 @@ void InitReservedIO(void) {
 		}
 #endif	
 	}
+#if defined(PICOMITE) && defined(rp2350)
+	if(Option.LCD_CLK && !(Option.LCD_CLK==Option.SYSTEM_CLK)){
+		LCD_CLK_PIN=PinDef[Option.LCD_CLK].GPno;
+		LCD_MOSI_PIN=PinDef[Option.LCD_MOSI].GPno;
+		LCD_MISO_PIN=PinDef[Option.LCD_MISO].GPno;
+		ExtCfg(Option.LCD_CLK, EXT_BOOT_RESERVED, 0);
+		ExtCfg(Option.LCD_MOSI, EXT_BOOT_RESERVED, 0);
+		ExtCfg(Option.LCD_MISO, EXT_BOOT_RESERVED, 0);
+		if(PinDef[Option.LCD_CLK].mode & SPI0SCK && PinDef[Option.LCD_MOSI].mode & SPI0TX  && PinDef[Option.LCD_MISO].mode & SPI0RX  ){
+			SET_SPI_CLK=HW0Clk;
+			SPI0locked=1;
+		} else if(PinDef[Option.LCD_CLK].mode & SPI1SCK && PinDef[Option.LCD_MOSI].mode & SPI1TX  && PinDef[Option.LCD_MISO].mode & SPI1RX  ){
+			SET_SPI_CLK=HW1Clk;
+			SPI1locked=1;
+		}
+		gpio_init(LCD_CLK_PIN);
+		gpio_set_drive_strength(LCD_CLK_PIN,GPIO_DRIVE_STRENGTH_8MA);
+		gpio_put(LCD_CLK_PIN,GPIO_PIN_RESET);
+		gpio_set_dir(LCD_CLK_PIN, GPIO_OUT);
+		gpio_set_slew_rate(LCD_CLK_PIN, GPIO_SLEW_RATE_FAST);
+		gpio_init(LCD_MOSI_PIN);
+		gpio_set_drive_strength(LCD_MOSI_PIN,GPIO_DRIVE_STRENGTH_8MA);
+		gpio_put(LCD_MOSI_PIN,GPIO_PIN_RESET);
+		gpio_set_dir(LCD_MOSI_PIN, GPIO_OUT);
+		gpio_set_slew_rate(LCD_MOSI_PIN, GPIO_SLEW_RATE_FAST);
+		gpio_init(LCD_MISO_PIN);
+		gpio_set_pulls(LCD_MISO_PIN,true,false);
+		gpio_set_dir(LCD_MISO_PIN, GPIO_IN);
+		gpio_set_input_hysteresis_enabled(LCD_MISO_PIN,true);
+/*		xchg_byte= BitBangSwapSPI;
+		xmit_byte_multi=BitBangSendSPI;
+		rcvr_byte_multi=BitBangReadSPI;*/
+	}
+#endif
 	if(Option.SYSTEM_CLK){
 		SPI_CLK_PIN=PinDef[Option.SYSTEM_CLK].GPno;
 		SPI_MOSI_PIN=PinDef[Option.SYSTEM_MOSI].GPno;
@@ -1609,12 +1642,12 @@ void InitReservedIO(void) {
 			SET_SPI_CLK=BitBangSetClk; 
 		}
 		gpio_init(SPI_CLK_PIN);
-		gpio_set_drive_strength(SD_CLK_PIN,GPIO_DRIVE_STRENGTH_8MA);
+		gpio_set_drive_strength(SPI_CLK_PIN,GPIO_DRIVE_STRENGTH_8MA);
 		gpio_put(SPI_CLK_PIN,GPIO_PIN_RESET);
 		gpio_set_dir(SPI_CLK_PIN, GPIO_OUT);
 		gpio_set_slew_rate(SPI_CLK_PIN, GPIO_SLEW_RATE_FAST);
 		gpio_init(SPI_MOSI_PIN);
-		gpio_set_drive_strength(SD_MOSI_PIN,GPIO_DRIVE_STRENGTH_8MA);
+		gpio_set_drive_strength(SPI_MOSI_PIN,GPIO_DRIVE_STRENGTH_8MA);
 		gpio_put(SPI_MOSI_PIN,GPIO_PIN_RESET);
 		gpio_set_dir(SPI_MOSI_PIN, GPIO_OUT);
 		gpio_set_slew_rate(SPI_MOSI_PIN, GPIO_SLEW_RATE_FAST);
@@ -1790,7 +1823,7 @@ void InitReservedIO(void) {
 		}
 	}
 #ifdef rp2350
-	}
+	} 
 #endif
 #endif
 	if(Option.SerialConsole){
@@ -1882,6 +1915,11 @@ char *pinsearch(int pin){
 	else if(pin==Option.SYSTEM_CLK)strcpy(buff,"SPI SYSTEM CLK");
 	else if(pin==Option.SYSTEM_MOSI)strcpy(buff,"SPI SYSTEM MOSI");
 	else if(pin==Option.SYSTEM_MISO)strcpy(buff,"SPI SYSTEM MISO");
+#if defined(PICOMITE) && defined(rp2350)
+	else if(pin==Option.LCD_CLK && Option.LCD_CLK!=Option.SYSTEM_CLK)strcpy(buff,"SPI LCD CLK");
+	else if(pin==Option.LCD_MOSI && Option.LCD_CLK!=Option.SYSTEM_CLK)strcpy(buff,"SPI LCD MOSI");
+	else if(pin==Option.LCD_MISO && Option.LCD_CLK!=Option.SYSTEM_CLK)strcpy(buff,"SPI LCD MISO");
+#endif
 	else if(pin==Option.audio_i2s_data)strcpy(buff,"I2S DATA");
 	else if(pin==Option.audio_i2s_bclk)strcpy(buff,"I2S BCLK");
 	else if(pin==PINMAP[PinDef[Option.audio_i2s_bclk].GPno+1])strcpy(buff,"I2S LRCK");
@@ -1897,6 +1935,31 @@ char *pinsearch(int pin){
 #endif
 #ifdef rp2350
 	else if(pin==Option.PSRAM_CS_PIN)strcpy(buff,"PSRAM CS");
+#if defined(PICOMITE)
+	else if(pin==PINMAP[24] && Option.LOCAL_KEYBOARD)strcpy(buff,"KEYBOARD C1");
+	else if(pin==PINMAP[26] && Option.LOCAL_KEYBOARD)strcpy(buff,"KEYBOARD C2");
+	else if(pin==PINMAP[27] && Option.LOCAL_KEYBOARD)strcpy(buff,"KEYBOARD C3");
+	else if(pin==PINMAP[28] && Option.LOCAL_KEYBOARD)strcpy(buff,"KEYBOARD C4");
+	else if(pin==PINMAP[29] && Option.LOCAL_KEYBOARD)strcpy(buff,"KEYBOARD C5");
+	else if(pin==PINMAP[30] && Option.LOCAL_KEYBOARD)strcpy(buff,"KEYBOARD C6");
+	else if(pin==PINMAP[31] && Option.LOCAL_KEYBOARD)strcpy(buff,"KEYBOARD C7");
+	else if(pin==PINMAP[32] && Option.LOCAL_KEYBOARD)strcpy(buff,"KEYBOARD C8");
+	else if(pin==PINMAP[33] && Option.LOCAL_KEYBOARD)strcpy(buff,"KEYBOARD C9");
+	else if(pin==PINMAP[34] && Option.LOCAL_KEYBOARD)strcpy(buff,"KEYBOARD C10");
+	else if(pin==PINMAP[35] && Option.LOCAL_KEYBOARD)strcpy(buff,"KEYBOARD C11");
+	else if(pin==PINMAP[36] && Option.LOCAL_KEYBOARD)strcpy(buff,"KEYBOARD C12");
+	else if(pin==PINMAP[37] && Option.LOCAL_KEYBOARD)strcpy(buff,"KEYBOARD R1");
+	else if(pin==PINMAP[38] && Option.LOCAL_KEYBOARD)strcpy(buff,"KEYBOARD R2");
+	else if(pin==PINMAP[39] && Option.LOCAL_KEYBOARD)strcpy(buff,"KEYBOARD R3");
+	else if(pin==PINMAP[40] && Option.LOCAL_KEYBOARD)strcpy(buff,"KEYBOARD R4");
+	else if(pin==PINMAP[41] && Option.LOCAL_KEYBOARD)strcpy(buff,"KEYBOARD R5");
+	else if(pin==PINMAP[42] && Option.LOCAL_KEYBOARD)strcpy(buff,"KEYBOARD R6");
+	else if(pin==PINMAP[43] && Option.LOCAL_KEYBOARD)strcpy(buff,"KEYBOARD BACKLIGHT");
+	else if(pin==PINMAP[44] && Option.LOCAL_KEYBOARD)strcpy(buff,"KEYBOARD LED3");
+	else if(pin==PINMAP[45] && Option.LOCAL_KEYBOARD)strcpy(buff,"KEYBOARD LED1");
+	else if(pin==PINMAP[46] && Option.LOCAL_KEYBOARD)strcpy(buff,"KEYBOARD LED2");
+	else if(pin==PINMAP[47] && Option.LOCAL_KEYBOARD)strcpy(buff,"BATTERY VOLTAGE");
+#endif
 #endif
 	else strcpy(buff, "NOT KNOWN");
 	return buff;
