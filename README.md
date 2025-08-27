@@ -14,9 +14,9 @@ NEW PICOCALC USERS
 Please download and install the [newest release](https://github.com/madcock/PicoMiteAllVersions/releases).
 If installing on a brand new PicoCalc, your keyboard firmware/bios is probably out of date. There is no easy way to tell which firmware is already installed, but if it's the "old" one, the PicoCalc specific ``MM.INFO()`` commands listed above won't work, and you'll probably get constant i2c keyboard disconnect errors which will make the device unusable. _It is highly recommended to update your keyboard firmware!_
 
-Use the [official guide to update your keyboard firmware](https://github.com/clockworkpi/PicoCalc/wiki/Setting-Up-Arduino-Development-for-PicoCalc-keyboard). There's a lot of extra information there which you can ignore unless you want to develop your own keyboard firmware. All you need to do is download ``STM32CubeProgrammer``, the newest keyboard firmware binary ([currently 1.2](https://github.com/clockworkpi/PicoCalc/blob/master/Bin/PicoCalc_BIOS_v1.2.bin) but please check to make sure there isn't anything newer), install it as described in the document using the dipswitch, and then reassemble everything carefully. Make sure you've put the dipswitch back in its original position after flashing the BIOS update. You'll only ever need to do this once, or perhaps again if another critical update is released. But regular PicoMite firmware updates do not require this keyboard BIOS update and it won't be lost if your batteries are removed, etc.
+Use the [official guide to update your keyboard firmware](https://github.com/clockworkpi/PicoCalc/wiki/Setting-Up-Arduino-Development-for-PicoCalc-keyboard). There's a lot of extra information there which you can ignore unless you want to develop your own keyboard firmware. All you need to do is download ``STM32CubeProgrammer``, the newest keyboard firmware binary ([currently 1.4](https://github.com/clockworkpi/PicoCalc/blob/master/Bin/PicoCalc_BIOS_v1.4.bin) but please check to make sure there isn't anything newer), install it as described in the document using the dipswitch, and then reassemble everything carefully. Make sure you've put the dipswitch back in its original position after flashing the BIOS update. You'll only ever need to do this once, or perhaps again if another critical update is released. But regular PicoMite firmware updates do not require this keyboard BIOS update and it won't be lost if your batteries are removed, etc.
 
-Any assembly/disassembly of the PicoCalc risks damaging the extremely fragile screen. Once it's damaged, there's no way to fix it, and a replacement will be needed. if necessary, contact [alex@clockworkpi.com](mailto:alex@clockworkpi.com) for a repalcement, and give him your original order invoice details and (usually picture) proof of screen damage. Be _very_ careful the display is seated properly when assembling! I recommend taping the screen down as [described in this post](https://forum.clockworkpi.com/t/before-replacing-the-pico-read-this-to-avoid-cracked-screen/16666/10). Electrical tape and kapton tape have both proven to work. The important thing is to never reattach the back with screws unless you are certain the screen is seated properly.
+Any assembly/disassembly of the PicoCalc risks damaging the extremely fragile screen. Once it's damaged, there's no way to fix it, and a replacement will be needed. if necessary, contact [alex@clockworkpi.com](mailto:alex@clockworkpi.com) for a replacement, and give him your original order invoice details and (usually picture) proof of screen damage. Be _very_ careful the display is seated properly when assembling! I recommend taping the screen down as [described in this post](https://forum.clockworkpi.com/t/before-replacing-the-pico-read-this-to-avoid-cracked-screen/16666/10). Electrical tape and kapton tape have both proven to work. The important thing is to never reattach the back with screws unless you are certain the screen is seated properly.
 
 INSTALL PICO SDK
 ----------------
@@ -26,7 +26,7 @@ sudo apt update && sudo apt install -y cmake gcc-arm-none-eabi libnewlib-arm-non
 mkdir -p ~/pico && cd ~/pico
 git clone https://github.com/raspberrypi/pico-sdk.git
 cd pico-sdk
-git checkout tags/2.1.1 -b sdk2.1.1
+git checkout tags/2.2.0 -b sdk2.2.0
 git submodule update --init
 
 echo 'export PICO_SDK_PATH=~/pico/pico-sdk' >> ~/.bashrc
@@ -43,10 +43,6 @@ mv ~/pico/pico-sdk/src/rp2_common/hardware_gpio/gpio.c ~/pico/pico-sdk/src/rp2_c
 ln -s ~/picocalc/PicoMiteAllVersions/gpio.c ~/pico/pico-sdk/src/rp2_common/hardware_gpio/gpio.c
 mv ~/pico/pico-sdk/src/rp2_common/hardware_gpio/include/hardware/gpio.h ~/pico/pico-sdk/src/rp2_common/hardware_gpio/include/hardware/gpio.bak
 ln -s ~/picocalc/PicoMiteAllVersions/gpio.h ~/pico/pico-sdk/src/rp2_common/hardware_gpio/include/hardware/gpio.h
-mv ~/pico/pico-sdk/src/rp2_common/pico_float/float_sci_m33_vfp.S ~/pico/pico-sdk/src/rp2_common/pico_float/float_sci_m33_vfp.bak
-ln -s ~/picocalc/PicoMiteAllVersions/float_sci_m33_vfp.S ~/pico/pico-sdk/src/rp2_common/pico_float/float_sci_m33_vfp.S
-mv ~/pico/pico-sdk/src/rp2_common/hardware_flash/flash.c ~/pico/pico-sdk/src/rp2_common/hardware_flash/flash.bak
-ln -s ~/picocalc/PicoMiteAllVersions/flash.c ~/pico/pico-sdk/src/rp2_common/hardware_flash/flash.c
 
 ```
 EDIT ``~/picocalc/PicoMiteAllVersions/CMakeLists.txt`` TO CHOOSE TARGET
