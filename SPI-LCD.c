@@ -4,22 +4,22 @@ PicoMite MMBasic
 SPI-LCD.c
 
 <COPYRIGHT HOLDERS>  Geoff Graham, Peter Mather
-Copyright (c) 2021, <COPYRIGHT HOLDERS> All rights reserved. 
-Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met: 
+Copyright (c) 2021, <COPYRIGHT HOLDERS> All rights reserved.
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 1.	Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
 2.	Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer
     in the documentation and/or other materials provided with the distribution.
-3.	The name MMBasic be used when referring to the interpreter in any documentation and promotional material and the original copyright message be displayed 
+3.	The name MMBasic be used when referring to the interpreter in any documentation and promotional material and the original copyright message be displayed
     on the console at startup (additional copyright messages may be added).
-4.	All advertising materials mentioning features or use of this software must display the following acknowledgement: This product includes software developed 
+4.	All advertising materials mentioning features or use of this software must display the following acknowledgement: This product includes software developed
     by the <copyright holder>.
-5.	Neither the name of the <copyright holder> nor the names of its contributors may be used to endorse or promote products derived from this software 
+5.	Neither the name of the <copyright holder> nor the names of its contributors may be used to endorse or promote products derived from this software
     without specific prior written permission.
 THIS SOFTWARE IS PROVIDED BY <COPYRIGHT HOLDERS> AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDERS> BE LIABLE FOR ANY DIRECT, 
-INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, 
-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDERS> BE LIABLE FOR ANY DIRECT,
+INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ************************************************************************************************************************/
 
@@ -27,6 +27,8 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 #include "MMBasic_Includes.h"
 #include "Hardware_Includes.h"
 #include "hardware/dma.h"
+#include "I2C.h"
+
 #if defined(PICOMITE) && defined(rp2350)
 #include "pico/multicore.h"
 #endif
@@ -132,8 +134,6 @@ void DefineRegionSPI(int xstart, int ystart, int xend, int yend, int rw);
 void DrawBitmapSPI(int x1, int y1, int width, int height, int scale, int fc, int bc, unsigned char *bitmap);
 extern const int SPISpeeds[];
 extern void spi_write_command(unsigned char command);
-extern void I2C_Send_Data(unsigned char* data, int n);
-void I2C_Send_Command(char command);
 extern int mmI2Cvalue;												// value of MM.I2C
 void waitwhilebusy(void);
 #if defined(PICOMITE) && defined(rp2350)
@@ -270,7 +270,7 @@ void MIPS16 ConfigDisplaySPI(unsigned char *p) {
 				CheckPin(BACKLIGHT, CP_IGNORE_INUSE);
         		if((PinDef[BACKLIGHT].slice & 0x7f) == Option.AUDIO_SLICE) error("Channel in use for Audio");
 			}
-		} 
+		}
 		CheckPin(CS, CP_IGNORE_INUSE);
 		Option.LCD_CS = CS;
 		if(argc==13){
@@ -384,8 +384,8 @@ void MIPS16 InitDisplaySPI(int InitOnly) {
 		uSec(150000);
 		//0xB1, 2, 0xB0, 0x11,        //Frame Rate Control [A0 10]
 		spi_write_cd(0xB4, 1, 0x01);              //Inversion Control [01]
-		if(Option.BGR)spi_write_command(0x21); 
-		else spi_write_command(0x20); 
+		if(Option.BGR)spi_write_command(0x21);
+		else spi_write_command(0x20);
 		spi_write_cd(0xB6, 3, 0x80, 0x02, 0x3B);  // Display Function Control [80 02 3B] .kbv SS=1, NL=480
 		spi_write_cd(0xB7, 1, 0xC6);             //Entry Mode      [06]
 	//    0xF7, 4, 0xA9, 0x51, 0x2C, 0x82,    //Adjustment Control 3 [A9 51 2C 82]
@@ -482,7 +482,7 @@ void MIPS16 InitDisplaySPI(int InitOnly) {
 
 				spi_write_command(0xB1); // Frame Rate Control
 				spi_write_data(0xA0);
-				if(Option.BGR)spi_write_command(0x21); 
+				if(Option.BGR)spi_write_command(0x21);
 				spi_write_command(0xB4); // Display Inversion Control
 				spi_write_data(0x02);
 
@@ -526,8 +526,8 @@ void MIPS16 InitDisplaySPI(int InitOnly) {
 				spi_write_command(TFT_DISPON); //Display on
 				uSec(25000);
 			} else {
-				if(Option.BGR)spi_write_command(0x20); 
-				else spi_write_command(0x21); 
+				if(Option.BGR)spi_write_command(0x20);
+				else spi_write_command(0x21);
 				spi_write_command(0xC2);	//Normal mode, increase can change the display quality, while increasing power consumption
 				spi_write_data(0x33);
 				spi_write_command(0XC5);
@@ -553,7 +553,7 @@ void MIPS16 InitDisplaySPI(int InitOnly) {
 				spi_write_data(0x06);
 				spi_write_data(0x30);
 				spi_write_data(0x3e);
-				spi_write_data(0x0f);		
+				spi_write_data(0x0f);
 				spi_write_command(0XE1);
 				spi_write_data(0x0);
 				spi_write_data(0x13);
@@ -586,7 +586,7 @@ void MIPS16 InitDisplaySPI(int InitOnly) {
  			break;
 		case ILI9481IPS:
 			ResetController();
-			//3.5IPS ILI9481+CMI	
+			//3.5IPS ILI9481+CMI
 			spi_write_command(0x01); //Soft_rese
 			uSec(220000);
 
@@ -607,7 +607,7 @@ void MIPS16 InitDisplaySPI(int InitOnly) {
 			spi_write_command(0xC5);  //Frame Rate
 			spi_write_data(0x03); // 03   02
 
-			spi_write_command(0xd2);  //Power_Setting for Normal Mode 
+			spi_write_command(0xd2);  //Power_Setting for Normal Mode
 			spi_write_data(0x01);  //01
 			spi_write_data(0x11);  //11
 
@@ -633,16 +633,16 @@ void MIPS16 InitDisplaySPI(int InitOnly) {
 			spi_write_data(0x00);
 			//GAMMA SETTING
 
-			spi_write_command(0xC0);	//Panel Driving Setting																          
+			spi_write_command(0xC0);	//Panel Driving Setting
 			spi_write_data(0x00); //1//00  REV  SM  GS
-			spi_write_data(0x3B); //2//NL[5:0]: Sets the number of lines to drive the LCD at an interval of 8 lines. 
+			spi_write_data(0x3B); //2//NL[5:0]: Sets the number of lines to drive the LCD at an interval of 8 lines.
 			spi_write_data(0x00); //3//SCN[6:0]
 			spi_write_data(0x02); //4//PTV: Sets the Vcom output in non-display area drive period
 			spi_write_data(0x11); //5//NDL: Sets the source output level in non-display area.  PTG: Sets the scan mode in non-display area.
 
-			spi_write_command(0xc6); //Interface Control 
+			spi_write_command(0xc6); //Interface Control
 			spi_write_data(0x83);
-			//GAMMA SETTING 
+			//GAMMA SETTING
 
 			spi_write_command(0xf0); //?
 			spi_write_data(0x01);
@@ -674,7 +674,7 @@ void MIPS16 InitDisplaySPI(int InitOnly) {
 			spi_write_data(0xDf); //DF
 
 			if(Option.BGR) spi_write_command(0x21);
-			spi_write_command(0x29);	
+			spi_write_command(0x29);
 			break;
 		case ILI9481:
 			DisplayHRes = 480;
@@ -895,7 +895,7 @@ void MIPS16 InitDisplaySPI(int InitOnly) {
 			spi_write_cd(ST7735_PWCTR5,2,0x8A,0xEE);                //power control
 			spi_write_cd(ST7735_VMCTR1,1,0x0E);                     //power control
 			if(Option.DISPLAY_TYPE==ST7735 || Option.DISPLAY_TYPE==ST7735S_W)Option.BGR ? spi_write_command(ST7735_INVON): spi_write_command(ST7735_INVOFF);                       //don't invert display
-			else Option.BGR ? spi_write_command(ST7735_INVOFF): spi_write_command(ST7735_INVON);  
+			else Option.BGR ? spi_write_command(ST7735_INVOFF): spi_write_command(ST7735_INVON);
 			spi_write_cd(ST7735_COLMOD,1,0x05);                     //set color mode
 			spi_write_cd(ST7735_CASET,4,0,0,0,0x7F);                //column addr set
 			spi_write_cd(ST7735_RASET,4,0,0,0,0x9F);                //row addr set
@@ -1199,7 +1199,7 @@ void DefineRegionSPI(int xstart, int ystart, int xend, int yend, int rw) {
 				xstart+=3;
 				xend+=3;
 				break;
-				case PORTRAIT: 
+				case PORTRAIT:
 				xstart+=2;
 				xend+=2;
 				ystart+=3;
@@ -1344,11 +1344,11 @@ void DrawRectangleSPI(int x1, int y1, int x2, int y2, int c){
 #endif
 				for(t=y1;t<=y2;t++){
 					spi_write_fast(spi0,p,i);
-				} 
+				}
 			} else {
 				for(t=y1;t<=y2;t++){
 					spi_write_fast(spi1,p,i);
-				} 
+				}
 			}
 		}
 	}
@@ -1399,11 +1399,11 @@ void PhysicalDrawRectSPI(int x1, int y1, int x2, int y2, int c){
 #endif
 			for(t=y1;t<=y2;t++){
 				spi_write_fast(spi0,p,i);
-			} 
+			}
 		} else {
 			for(t=y1;t<=y2;t++){
 				spi_write_fast(spi1,p,i);
-			} 
+			}
 		}
 	}
 
@@ -1522,7 +1522,7 @@ void DrawBitmapSPI(int x1, int y1, int width, int height, int scale, int fc, int
 								b[0] = ((c.rgb >> 16) & 0b11111000) | ((c.rgb >> 13) & 0b00000111);
 								b[1] = ((c.rgb >>  5) & 0b11100000) | ((c.rgb >>  3) & 0b00011111);
 							}
-						} 
+						}
                         SPIqueue((uint8_t *)&b);
 
                     }
@@ -1536,7 +1536,7 @@ void DrawBitmapSPI(int x1, int y1, int width, int height, int scale, int fc, int
 
     // revert to non enhanced SPI mode
     if(p != NULL) FreeMemory((unsigned char *)p);
- 
+
 }
 void DrawBitmapSPISCR(int x1, int y1, int width, int height, int scale, int fc, int bc, unsigned char *bitmap){
     int i, j, k, m, y, yt, n;
@@ -1614,7 +1614,7 @@ void DrawBitmapSPISCR(int x1, int y1, int width, int height, int scale, int fc, 
 								b[0] = ((c.rgb >> 16) & 0b11111000) | ((c.rgb >> 13) & 0b00000111);
 								b[1] = ((c.rgb >>  5) & 0b11100000) | ((c.rgb >>  3) & 0b00011111);
 							}
-						} 
+						}
                         SPIqueue((uint8_t *)&b);
 
                     }
@@ -1706,7 +1706,7 @@ void ReadBufferSPISCR(int x1, int y1, int x2, int y2, unsigned char* p) {
     if(Option.DISPLAY_TYPE==ILI9341 || Option.DISPLAY_TYPE==ST7789B )spi_write_cd(ILI9341_PIXELFORMAT,1,0x66); //change to RDB666 for read
 	t = y2 - y1;                                                    // get the distance between the top and bottom
 	y1 = (y1 + ScrollStart) % VRes;
-	y2 = y1 + t;  
+	y2 = y1 + t;
     if(y2 >= VRes) {
 		N=(x2- x1+1) * (y2- VRes) * ((Option.DISPLAY_TYPE==ST7796S  || Option.DISPLAY_TYPE == ST7796SP) ? 2 : 3);
 		DefineRegionSPI(x1, y1, x2, VRes - 1,0);
@@ -1848,7 +1848,7 @@ void DrawBufferSPISCR(int x1, int y1, int x2, int y2, unsigned char* p) {
     if(y2 >= VRes) y2 = VRes - 1;
     t = y2 - y1;                                                    // get the distance between the top and bottom
 	y1 = (y1 + ScrollStart) % VRes;
-	y2 = y1 + t; 
+	y2 = y1 + t;
 	i=(x2-x1+1) * (y2-y1+1);
     if(y2 >= VRes) {
 		DefineRegionSPI(x1, y1, x2, VRes - 1, 1);
@@ -1945,14 +1945,14 @@ void ScrollLCDSPI(int lines){
     if(lines >= 0) {
         for(int i=0;i<VRes-lines;i++) {
             ReadBLITBuffer(0, i+lines, HRes -1, i+lines, buff);
-            DrawBLITBuffer(0, i, HRes - 1, i, buff);        	
+            DrawBLITBuffer(0, i, HRes - 1, i, buff);
         }
         DrawRectangle(0, VRes-lines, HRes - 1, VRes - 1, gui_bcolour); // erase the lines to be scrolled off
     } else {
         lines=-lines;
         for(int i=VRes-1;i>=lines;i--) {
             ReadBLITBuffer(0, i-lines, HRes -1, i-lines, buff);
-            DrawBLITBuffer(0, i, HRes - 1, i, buff);        	
+            DrawBLITBuffer(0, i, HRes - 1, i, buff);
         }
         DrawRectangle(0, 0, HRes - 1, lines - 1, gui_bcolour); // erase the lines introduced at the top
     }
@@ -1998,7 +1998,7 @@ void ScrollLCDMEM332(int lines){
 }
 
 void DrawBufferMEM332(int x1, int y1, int x2, int y2, unsigned char* p) {
-    int x,y; 
+    int x,y;
     union colourmap
     {
     char rgbbytes[4];
@@ -2030,7 +2030,7 @@ void DrawBlitBufferMEM332(int x1, int y1, int x2, int y2, unsigned char* p) {
 }
 #endif
 void DrawBufferMEM(int x1, int y1, int x2, int y2, unsigned char* p) {
-    int x,y; 
+    int x,y;
     union colourmap
     {
     char rgbbytes[4];
@@ -2281,7 +2281,7 @@ void DrawBitmapMEM332(int x1, int y1, int width, int height, int scale, int fc, 
                         } else {
                             if(bc>=0){
                                 *p=b;
-                            } 
+                            }
                         }
                    }
                 }
@@ -2357,9 +2357,9 @@ void N5110SetXY(int x, int y){
 }
 void SSD1306I2CSetXY(uint8_t x, uint8_t y){
 	uint8_t xn=x;
-	I2C_Send_Command(0xB0 | y);
-	I2C_Send_Command(0x10 | ((xn>>4) & 0xF));
-	I2C_Send_Command(0x00 | (xn & 0xF));
+	SSD1306_Send_Command(0xB0 | y);
+	SSD1306_Send_Command(0x10 | ((xn>>4) & 0xF));
+	SSD1306_Send_Command(0x00 | (xn & 0xF));
 }
 void SSD1306SPISetXY(uint8_t x, uint8_t y){
 	uint8_t xn=x;
@@ -2524,7 +2524,7 @@ void copybuffertoscreen(unsigned char *s,int low_x,int low_y,int high_x,int high
 	}
 	if(PinDef[Option.LCD_CLK].mode & SPI0SCK)spi_finish(spi0);
 	else spi_finish(spi1);
-	ClearCS(Option.LCD_CS); 
+	ClearCS(Option.LCD_CS);
 }
 #endif
 void Display_Refresh(void){
@@ -2556,7 +2556,7 @@ void Display_Refresh(void){
 		int y;
 		for(y=low_y/8;y<(high_y & 0xf8)/8+1;y++){
 			SSD1306I2CSetXY(Option.I2Coffset+low_x,y);
-			I2C_Send_Data(p+(y*DisplayHRes)+low_x,high_x-low_x+1);
+			SSD1306_Send_Data(p+(y*DisplayHRes)+low_x,high_x-low_x+1);
 		}
 	} else if(Option.DISPLAY_TYPE==SSD1306SPI){
 		int y;
@@ -2621,7 +2621,7 @@ void SPISpeedSet(int device){
 			xchg_byte= BitBangSwapSPI;
 			xmit_byte_multi=BitBangSendSPI;
 			rcvr_byte_multi=BitBangReadSPI;
-			SET_SPI_CLK=BitBangSetClk; 
+			SET_SPI_CLK=BitBangSetClk;
 			SET_SPI_CLK(SD_SPI_SPEED, false, false);
 		} else {
 			if(PinDef[Option.SYSTEM_CLK].mode & SPI0SCK && PinDef[Option.SYSTEM_MOSI].mode & SPI0TX  && PinDef[Option.SYSTEM_MISO].mode & SPI0RX  ) {
@@ -2656,7 +2656,7 @@ void SPISpeedSet(int device){
 				xchg_byte= BitBangSwapSPI;
 				xmit_byte_multi=BitBangSendSPI;
 				rcvr_byte_multi=BitBangReadSPI;
-				SET_SPI_CLK=BitBangSetClk; 
+				SET_SPI_CLK=BitBangSetClk;
 			}
 			SET_SPI_CLK(display_details[device].speed, display_details[device].CPOL, display_details[device].CPHASE);
 		}

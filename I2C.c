@@ -4,22 +4,22 @@ PicoMite MMBasic
 I2C.c
 
 <COPYRIGHT HOLDERS>  Geoff Graham, Peter Mather
-Copyright (c) 2021, <COPYRIGHT HOLDERS> All rights reserved. 
-Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met: 
+Copyright (c) 2021, <COPYRIGHT HOLDERS> All rights reserved.
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 1.	Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
 2.	Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer
     in the documentation and/or other materials provided with the distribution.
-3.	The name MMBasic be used when referring to the interpreter in any documentation and promotional material and the original copyright message be displayed 
+3.	The name MMBasic be used when referring to the interpreter in any documentation and promotional material and the original copyright message be displayed
     on the console at startup (additional copyright messages may be added).
-4.	All advertising materials mentioning features or use of this software must display the following acknowledgement: This product includes software developed 
+4.	All advertising materials mentioning features or use of this software must display the following acknowledgement: This product includes software developed
     by the <copyright holder>.
-5.	Neither the name of the <copyright holder> nor the names of its contributors may be used to endorse or promote products derived from this software 
+5.	Neither the name of the <copyright holder> nor the names of its contributors may be used to endorse or promote products derived from this software
     without specific prior written permission.
 THIS SOFTWARE IS PROVIDED BY <COPYRIGHT HOLDERS> AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDERS> BE LIABLE FOR ANY DIRECT, 
-INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, 
-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDERS> BE LIABLE FOR ANY DIRECT,
+INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ************************************************************************************************************************/
 /**
@@ -141,7 +141,6 @@ These are the functions responsible for executing the I2C related commands in MM
 They are supported by utility functions that are grouped at the end of this file
 
 ********************************************************************************************/
-#ifdef PICOCALC
 void I2C_Send_RegData(int i2caddr,int reg,char command){
     int i2cret;
     I2C_Send_Buffer[0]=reg;
@@ -155,22 +154,12 @@ void I2C_Send_RegData(int i2caddr,int reg,char command){
     if(i2cret==PICO_ERROR_TIMEOUT)mmI2Cvalue=2;
 //	mmI2Cvalue=HAL_I2C_Master_Transmit(&hi2c1, (uint16_t)i2caddr, I2C_Send_Buffer, I2C_Sendlen, I2C_Timeout);
 }
-#endif
-void I2C_Send_Command(char command) {
-  int i2cret;
-  int i2caddr = SSD1306_I2C_Addr;
-  I2C_Send_Buffer[0] = 0;
-  I2C_Send_Buffer[1] = command;
-  I2C_Sendlen = 2;
-  I2C_Timeout = 1000;
-  if (I2C1locked) i2cret = i2c_write_timeout_us(i2c1, (uint8_t) i2caddr, (uint8_t * ) I2C_Send_Buffer, I2C_Sendlen, false, I2C_Timeout * 1000);
-  else i2cret = i2c_write_timeout_us(i2c0, (uint8_t) i2caddr, (uint8_t * ) I2C_Send_Buffer, I2C_Sendlen, false, I2C_Timeout * 1000);
-  mmI2Cvalue = 0;
-  if (i2cret == PICO_ERROR_GENERIC) mmI2Cvalue = 1;
-  if (i2cret == PICO_ERROR_TIMEOUT) mmI2Cvalue = 2;
-  //	mmI2Cvalue=HAL_I2C_Master_Transmit(&hi2c1, (uint16_t)i2caddr, I2C_Send_Buffer, I2C_Sendlen, I2C_Timeout);
+
+void SSD1306_Send_Command(char command) {
+  I2C_Send_RegData(SSD1306_I2C_Addr, 0, command);
 }
-void I2C_Send_Data(unsigned char * data, int n) {
+
+void SSD1306_Send_Data(unsigned char * data, int n) {
   int i2cret;
   int i, i2caddr = SSD1306_I2C_Addr;
   I2C_Sendlen = n + 1;
@@ -237,45 +226,45 @@ void InitDisplayI2C(int InitOnly) {
   ReadBLITBuffer = ReadBufferMEM;
   DisplayHRes = display_details[Option.DISPLAY_TYPE].horizontal;
   DisplayVRes = display_details[Option.DISPLAY_TYPE].vertical;
-  I2C_Send_Command(0xAE); //DISPLAYOFF
+  SSD1306_Send_Command(0xAE); //DISPLAYOFF
 
-  I2C_Send_Command(0xD5); //DISPLAYCLOCKDIV
-  I2C_Send_Command(0xF0); //the suggested ratio &H80
+  SSD1306_Send_Command(0xD5); //DISPLAYCLOCKDIV
+  SSD1306_Send_Command(0xF0); //the suggested ratio &H80
 
-  I2C_Send_Command(0xA8); //MULTIPLEX
-  if (Option.DISPLAY_TYPE == SSD1306I2C) I2C_Send_Command(0x3F);
-  else if (Option.DISPLAY_TYPE == SSD1306I2C32) I2C_Send_Command(0x1F);
+  SSD1306_Send_Command(0xA8); //MULTIPLEX
+  if (Option.DISPLAY_TYPE == SSD1306I2C) SSD1306_Send_Command(0x3F);
+  else if (Option.DISPLAY_TYPE == SSD1306I2C32) SSD1306_Send_Command(0x1F);
 
-  I2C_Send_Command(0xD3); //DISPLAYOFFSET
-  I2C_Send_Command(0x0); //no offset
+  SSD1306_Send_Command(0xD3); //DISPLAYOFFSET
+  SSD1306_Send_Command(0x0); //no offset
 
-  I2C_Send_Command(0x40); //STARTLINE
-  
-  I2C_Send_Command(0x8D); //CHARGEPUMP
-  I2C_Send_Command(0x14);
-  
-  I2C_Send_Command(0x20); //MEMORYMODE
-  I2C_Send_Command(0x00); //&H0 act like ks0108
-  
-  I2C_Send_Command(0xA1); //SEGREMAP OR 1
-  I2C_Send_Command(0xC8); //COMSCANDEC
-  
-  I2C_Send_Command(0xDA); //COMPINS
-  if (Option.DISPLAY_TYPE == SSD1306I2C) I2C_Send_Command(0x12);
-  else if (Option.DISPLAY_TYPE == SSD1306I2C32) I2C_Send_Command(0x02);
-  
-  I2C_Send_Command(0x81); //SETCONTRAST
-  I2C_Send_Command(0xCF);
-  
-  I2C_Send_Command(0xd9); //SETPRECHARGE
-  I2C_Send_Command(0x22);
-  
-  I2C_Send_Command(0xDB); //VCOMDETECT
-  I2C_Send_Command(0x20);
-  
-  I2C_Send_Command(0xA4); //DISPLAYALLON_RESUME
-  I2C_Send_Command(0xA6); //NORMALDISPLAY
-  I2C_Send_Command(0xAF); //DISPLAYON
+  SSD1306_Send_Command(0x40); //STARTLINE
+
+  SSD1306_Send_Command(0x8D); //CHARGEPUMP
+  SSD1306_Send_Command(0x14);
+
+  SSD1306_Send_Command(0x20); //MEMORYMODE
+  SSD1306_Send_Command(0x00); //&H0 act like ks0108
+
+  SSD1306_Send_Command(0xA1); //SEGREMAP OR 1
+  SSD1306_Send_Command(0xC8); //COMSCANDEC
+
+  SSD1306_Send_Command(0xDA); //COMPINS
+  if (Option.DISPLAY_TYPE == SSD1306I2C) SSD1306_Send_Command(0x12);
+  else if (Option.DISPLAY_TYPE == SSD1306I2C32) SSD1306_Send_Command(0x02);
+
+  SSD1306_Send_Command(0x81); //SETCONTRAST
+  SSD1306_Send_Command(0xCF);
+
+  SSD1306_Send_Command(0xd9); //SETPRECHARGE
+  SSD1306_Send_Command(0x22);
+
+  SSD1306_Send_Command(0xDB); //VCOMDETECT
+  SSD1306_Send_Command(0x20);
+
+  SSD1306_Send_Command(0xA4); //DISPLAYALLON_RESUME
+  SSD1306_Send_Command(0xA6); //NORMALDISPLAY
+  SSD1306_Send_Command(0xAF); //DISPLAYON
   if (Option.DISPLAY_ORIENTATION & 1) {
     VRes = DisplayVRes;
     HRes = DisplayHRes;
@@ -372,7 +361,7 @@ void cmd_i2c2(void) {
   else
     error("Unknown command");
 }
-/* 
+/*
  * @cond
  * The following section will be excluded from the documentation.
  */
@@ -466,7 +455,7 @@ int DoRtcI2C(int addr, unsigned char * buff) {
 #ifndef USBKEYBOARD
 void CheckI2CKeyboard(int noerror, int read) {
   uint16_t buff;
-  //	int readover=0; 
+  //	int readover=0;
   static int ctrlheld = 0;
   //	while(readover==0){
   if (I2C0locked) {
@@ -725,7 +714,7 @@ void MIPS16 cmd_rtc(void) {
         MMPrintString("\r\n");
       }
     }
-  
+
     return;
   }
   if ((p = checkstring(cmdline, (unsigned char * )
@@ -881,7 +870,7 @@ void MIPS16 cmd_rtc(void) {
     error("Unknown command");
 
 }
-/* 
+/*
  * @cond
  * The following section will be excluded from the documentation.
  */
@@ -1458,7 +1447,7 @@ void fun_mmi2c(void) {
   iret = mmI2Cvalue;
   targ = T_INT;
 }
-/* 
+/*
  * @cond
  * The following section will be excluded from the documentation.
  */
@@ -1679,7 +1668,7 @@ void MIPS16 cmd_Classic(void) {
   } else error("Syntax");
 }
 
-/* 
+/*
  * @cond
  * The following section will be excluded from the documentation.
  */
@@ -2128,13 +2117,13 @@ void MIPS16 cmd_camera(void) {
     ov7670_set(REG_RGB444, 0);
     ov7670_set(REG_COM10, 0x02); // 0x02   VSYNC negative (http://nasulica.homelinux.org/?p=959)
     ov7670_set(REG_MVFP, 0x37);
-    // 		ov7670_set( REG_CLKRC, 0x40); 
+    // 		ov7670_set( REG_CLKRC, 0x40);
     ov7670_set(REG_COM11, 0x0A);
     ov7670_set(REG_COM7, COM7_RGB);
     ov7670_set(REG_COM1, 0);
     ov7670_set(REG_COM15, COM15_RGB565);
     ov7670_set(REG_COM9, 0x2A);
-    ov7670_set(REG_TSLB, 0x04); // 0D = UYVY  04 = YUYV 
+    ov7670_set(REG_TSLB, 0x04); // 0D = UYVY  04 = YUYV
     ov7670_set(REG_COM13, 0x88);
     ov7670_set(REG_HSTART, 0x13);
     ov7670_set(REG_HSTOP, 0x01);
@@ -2189,7 +2178,7 @@ void MIPS16 cmd_camera(void) {
     ov7670_set(0x88, 0xd7);
     ov7670_set(0x89, 0xe8);
     // AGC and AEC parameters. Note we start by disabling those features,
-    //then turn them only after tweaking the values. 
+    //then turn them only after tweaking the values.
     ov7670_set(0x13, COM8_FASTAEC | COM8_AECSTEP | COM8_BFILT);
     ov7670_set(0x00, 0);
     ov7670_set(0x10, 0);
@@ -2209,7 +2198,7 @@ void MIPS16 cmd_camera(void) {
     ov7670_set(0xa9, 0x90);
     ov7670_set(0xaa, 0x94);
     ov7670_set(0x13, COM8_FASTAEC | COM8_AECSTEP | COM8_BFILT | COM8_AGC | COM8_AEC);
-    // Almost all of these are magic "reserved" values. */ 
+    // Almost all of these are magic "reserved" values. */
     ov7670_set(0x0e, 0x61);
     ov7670_set(0x0f, 0x4b);
     ov7670_set(0x16, 0x02);
@@ -2222,11 +2211,11 @@ void MIPS16 cmd_camera(void) {
     ov7670_set(0x37, 0x1d);
     ov7670_set(0x38, 0x71);
     ov7670_set(0x39, 0x2a);
-    // 		ov7670_set(0x3c, 0x78); 
+    // 		ov7670_set(0x3c, 0x78);
     ov7670_set(0x4d, 0x40);
     ov7670_set(0x4e, 0x20);
     ov7670_set(0x69, 0);
-    // 		ov7670_set(0x6b, 0x0a); 
+    // 		ov7670_set(0x6b, 0x0a);
     ov7670_set(0x74, 0x10);
     ov7670_set(0x8d, 0x4f);
     ov7670_set(0x8e, 0);
