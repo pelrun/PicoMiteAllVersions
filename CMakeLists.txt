@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.13)
 # Valid builds are PICO, PICOUSB, VGA, VGAUSB, HDMI(rp2350 only), HDMIUSB(rp2350 only), WEB
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 set(PICOCALC true)
 # For dynamic loading from SD card:
 # SDBOOT requires the bootloader to be in the first 256KB of flash
@@ -13,8 +15,8 @@ set(PICOCALC true)
 #set(COMPILE PICO)
 
 # Compile for PICO 2 Board
-#set(COMPILE PICORP2350)
-set(COMPILE WEBRP2350)
+set(COMPILE PICORP2350)
+#set(COMPILE WEBRP2350)
 
 if (COMPILE STREQUAL "HDMI" OR COMPILE STREQUAL "WEBRP2350" OR COMPILE STREQUAL "HDMIUSB"  OR COMPILE STREQUAL "VGARP2350"  OR COMPILE STREQUAL "VGAUSBRP2350"  OR COMPILE STREQUAL "PICORP2350"  OR COMPILE STREQUAL "PICOUSBRP2350" )
 	set(PICO_PLATFORM rp2350)
@@ -39,7 +41,7 @@ set(CMAKE_CXX_STANDARD 17)
 pico_sdk_init()
 add_executable(PicoMite
 	PicoMite.c
-	regex.c 
+	regex.c
 	MMBasic.c
 	Operators.c
 	Custom.c
@@ -65,21 +67,22 @@ add_executable(PicoMite
 	GPS.c
 	Audio.c
 	CFunction.c
-    picojpeg.c 
+    picojpeg.c
     lfs.c
     lfs_util.c
 	hxcmod.c
     VS1053.c
 	aes.c
 	Memory.c
+	flash.c
 )
 if (COMPILE STREQUAL "HDMI" OR COMPILE STREQUAL "WEBRP2350" OR COMPILE STREQUAL "HDMIUSB"  OR COMPILE STREQUAL "VGARP2350"  OR COMPILE STREQUAL "VGAUSBRP2350"  OR COMPILE STREQUAL "PICORP2350"  OR COMPILE STREQUAL "PICOUSBRP2350" )
     target_sources(PicoMite PRIVATE psram.c)
 endif()
 if (COMPILE STREQUAL "WEB" OR COMPILE STREQUAL "WEBRP2350" )
-    target_sources(PicoMite PRIVATE 
-	SSD1963.c 
-	Touch.c     
+    target_sources(PicoMite PRIVATE
+	SSD1963.c
+	Touch.c
 	GUI.c
 	cJSON.c
     mqtt.c
@@ -101,25 +104,25 @@ if (COMPILE STREQUAL "WEB" OR COMPILE STREQUAL "WEBRP2350" )
 endif()
 
 if ((COMPILE STREQUAL "PICO") OR (COMPILE STREQUAL "PICOUSB") OR (COMPILE STREQUAL "PICORP2350") OR (COMPILE STREQUAL "PICOUSBRP2350") OR (COMPILE STREQUAL "WEBRP2350"))
-    target_sources(PicoMite PRIVATE 
-	SSD1963.c 
-	Touch.c 
+    target_sources(PicoMite PRIVATE
+	SSD1963.c
+	Touch.c
 	GUI.c)
 endif()
 
 if (COMPILE STREQUAL "VGAUSB" OR COMPILE STREQUAL "PICOUSBRP2350" OR COMPILE STREQUAL "VGAUSBRP2350" OR COMPILE STREQUAL "PICOUSB" OR COMPILE STREQUAL "HDMIUSB")
-    target_sources(PicoMite PRIVATE 
+    target_sources(PicoMite PRIVATE
 	USBKeyboard.c
 	)
 else()
-	target_sources(PicoMite PRIVATE 
-	Keyboard.c 
+	target_sources(PicoMite PRIVATE
+	Keyboard.c
 	mouse.c
 	)
 endif()
 
 if(COMPILE STREQUAL "VGARP2350" OR COMPILE STREQUAL "WEBRP2350" OR COMPILE STREQUAL "PICORP2350" OR COMPILE STREQUAL "HDMI" OR COMPILE STREQUAL "HDMIUSB" OR COMPILE STREQUAL "VGAUSBRP2350" OR COMPILE STREQUAL "PICOUSBRP2350")
-	target_sources(PicoMite PRIVATE 
+	target_sources(PicoMite PRIVATE
 	upng.c
 	)
 endif()
@@ -172,9 +175,9 @@ endif()
 target_compile_options(PicoMite PRIVATE -DNDEBUG
 										-DPICO_STDIO_USB_ENABLE_RESET_VIA_VENDOR_INTERFACE=0
 										-DPICO_ADC_CLKDIV_ROUND_NEAREST
-										-DPICO_XOSC_STARTUP_DELAY_MULTIPLIER=64 
+										-DPICO_XOSC_STARTUP_DELAY_MULTIPLIER=64
 										-DPICO_CLOCK_AJDUST_PERI_CLOCK_WITH_SYS_CLOCK
-										-DPICO_XOSC_STARTUP_DELAY_MULTIPLIER=64 
+										-DPICO_XOSC_STARTUP_DELAY_MULTIPLIER=64
 										-DPICO_FLASH_SIZE_BYTES=16777216
 										-DPICO_CORE1_STACK_SIZE=0x00
 										-DPICO_MALLOC_PANIC
@@ -190,15 +193,15 @@ endif()
 # all PicoMite variants - enable the gui
 if (COMPILE STREQUAL "PICO" OR COMPILE STREQUAL "PICOUSB" OR COMPILE STREQUAL "PICORP2350" OR COMPILE STREQUAL "PICOUSBRP2350")
 target_compile_options(PicoMite PRIVATE -DPICOMITE
-										-DPICO_HEAP_SIZE=0x1000 
+										-DPICO_HEAP_SIZE=0x1000
 										-DGUICONTROLS
 										-DPICO_CORE0_STACK_SIZE=0x1000
 										)
 endif()
-# all VGA variants 
+# all VGA variants
 if (COMPILE STREQUAL "VGA" OR COMPILE STREQUAL "VGAUSB" OR COMPILE STREQUAL "VGARP2350" OR COMPILE STREQUAL "VGAUSBRP2350")
 target_compile_options(PicoMite PRIVATE -DPICOMITEVGA
-										-DPICO_HEAP_SIZE=0x1000 
+										-DPICO_HEAP_SIZE=0x1000
 										-DPICO_CORE0_STACK_SIZE=0x2000
 										)
 endif()
@@ -206,15 +209,15 @@ endif()
 if (COMPILE STREQUAL "HDMI" OR COMPILE STREQUAL "HDMIUSB")
 target_compile_options(PicoMite PRIVATE -DPICOMITEVGA
 										-DHDMI
-										-DPICO_HEAP_SIZE=0x2000 
+										-DPICO_HEAP_SIZE=0x2000
 										-DPICO_CORE0_STACK_SIZE=0x2000
 										)
 endif()
 #Web variants need more heap
 if(COMPILE STREQUAL "WEB" OR COMPILE STREQUAL "WEBRP2350")
-	target_compile_options(PicoMite PRIVATE -DPICOMITEWEB 
-											-DPICO_HEAP_SIZE=0x3000 
-											-DCYW43_HOST_NAME="WebMite" 
+	target_compile_options(PicoMite PRIVATE -DPICOMITEWEB
+											-DPICO_HEAP_SIZE=0x3000
+											-DCYW43_HOST_NAME="WebMite"
 											-DPICO_CYW43_ARCH_POLL
 											-DPICO_CORE0_STACK_SIZE=0x4000
 											)
@@ -251,7 +254,7 @@ target_link_libraries(PicoMite
 
 if(COMPILE STREQUAL "VGAUSB" OR COMPILE STREQUAL "PICOUSB" OR COMPILE STREQUAL "HDMIUSB" OR COMPILE STREQUAL "PICOUSBRP2350" OR COMPILE STREQUAL "VGAUSBRP2350")
 	target_link_libraries(PicoMite
-	tinyusb_host 
+	tinyusb_host
 	tinyusb_board
 	pico_multicore
 	)

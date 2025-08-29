@@ -33,7 +33,7 @@ extern "C" {
 #include "configuration.h"
 #include "hardware/watchdog.h"
 #include "hardware/clocks.h"
-#include "hardware/flash.h"
+#include "flash.h"
 #include "hardware/adc.h"
 #include "hardware/exception.h"
 #include "MMBasic_Includes.h"
@@ -1836,7 +1836,7 @@ void sigbus(void){
     MMPrintString("Error: Invalid address - resetting\r\n");
 	uSec(250000);
 	disable_interrupts_pico();
-//	flash_range_erase(PROGSTART, MAX_PROG_SIZE);
+//	flash_erase(PROGSTART, MAX_PROG_SIZE);
     LoadOptions();
     if(Option.NoReset==0){
         Option.Autorun=0;
@@ -2401,6 +2401,8 @@ void (* volatile Core1Fnc)() = NULL; // core 1 remote function
 // QVGA core
 void __not_in_flash_func(QVgaCore)()
 {
+    flash_safe_execute_core_init(); // allow flash operations to lock out this core
+
 	// initialize QVGA
 	QVgaInit();
 
@@ -3510,6 +3512,8 @@ void mapreset(void){
     }
 }
 void HDMICore(void){
+    flash_safe_execute_core_init(); // allow flash operations to lock out this core
+
     mapreset();
     if(Option.CPU_Speed==FreqXGA){
         MODE_H_SYNC_POLARITY=MODE_H_L_SYNC_POLARITY;
@@ -3869,7 +3873,18 @@ void settiles(void){
 #endif
 #else
 #ifdef PICOMITE
-#include "pico/multicore.h"
+
+// thread to do nothing but allow rom_flash_op to work
+void __not_in_flash_func(NullCore)()
+{
+    flash_safe_execute_core_init(); // allow flash operations to lock out this core
+
+	while (true)
+	{
+        tight_loop_contents();
+    }
+}
+
 void __not_in_flash_func(UpdateCore)()
 {
 //    systick_hw->csr = 0x5;
@@ -3877,6 +3892,8 @@ void __not_in_flash_func(UpdateCore)()
 //    while(multicore_fifo_rvalid()) {
 //        multicore_fifo_pop_blocking();
 //    }
+
+    flash_safe_execute_core_init(); // allow flash operations to lock out this core
 
 	while (true)
 	{
@@ -4152,8 +4169,12 @@ int MIPS16 main(){
     static int ErrorInPrompt;
     int i=0;
     char savewatchdog=false;
-        i=watchdog_caused_reboot();
+    i=watchdog_caused_reboot();
+
 #ifdef rp2350
+    multicore_reset_core1();
+    multicore_launch_core1_with_stack(NullCore,core1stack,512);
+
     restart_reason=powman_hw->chip_reset | i;
     rp2350a=(*((io_ro_32*)(SYSINFO_BASE + SYSINFO_PACKAGE_SEL_OFFSET)) & 1);
 #else
@@ -4453,6 +4474,7 @@ if(Option.CPU_Speed==FreqSVGA){ //adjust the size of the heap
     #else
     #ifdef PICOMITE
         bus_ctrl_hw->priority=0x100;
+        multicore_reset_core1();
         multicore_launch_core1_with_stack(UpdateCore,core1stack,2048);
         core1stack[0]=0x12345678;
     #endif
@@ -4724,7 +4746,7 @@ void stripcomment(char *p){
 void MIPS16 SaveProgramToFlash(unsigned char *pm, int msg) {
     unsigned char *p, fontnbr, prevchar = 0, buf[STRINGSIZE];
     unsigned short endtoken, tkn;
-    int nbr, i, j, n, SaveSizeAddr;
+    int nbr, i, n, SaveSizeAddr;
     bool continuation=false;
     multi=false;
     uint32_t storedupdates[MAXCFUNCTION], updatecount=0, realflashsave;
@@ -4737,13 +4759,7 @@ void MIPS16 SaveProgramToFlash(unsigned char *pm, int msg) {
 #endif
     memcpy(buf, tknbuf, STRINGSIZE);                                // save the token buffer because we are going to use it
     FlashWriteInit(PROGRAM_FLASH);
-    flash_range_erase(realflashpointer, MAX_PROG_SIZE);
-    j=MAX_PROG_SIZE/4;
-    int *pp=(int *)(flash_progmemory);
-        while(j--)if(*pp++ != 0xFFFFFFFF){
-            enable_interrupts_pico();
-            error("Flash erase problem");
-        }
+    flash_erase(realflashpointer, MAX_PROG_SIZE);
     nbr = 0;
     // this is used to count the number of bytes written to flash
     while(*pm) {
