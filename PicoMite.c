@@ -3872,8 +3872,8 @@ void settiles(void){
 
 #endif
 #else
-#ifdef PICOMITE
 
+#if rp2350
 // thread to do nothing but allow rom_flash_op to work
 void __not_in_flash_func(NullCore)()
 {
@@ -3884,6 +3884,9 @@ void __not_in_flash_func(NullCore)()
         tight_loop_contents();
     }
 }
+#endif
+
+#ifdef PICOMITE
 
 void __not_in_flash_func(UpdateCore)()
 {
