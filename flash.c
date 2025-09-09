@@ -62,20 +62,13 @@ int flash_program(uint32_t address, const void* buf, uint32_t size_bytes)
 #endif
 }
 
-// disable_interrupts_pico();
-// uint8_t txbuf[4] = {0x9f};
-// uint8_t rxbuf[4] = {0};
-// flash_do_cmd(txbuf, rxbuf, 4);
-// Option.FlashSize= 1 << rxbuf[3];
-// enable_interrupts_pico();
-
 int flash_size(void)
 {
 #if PICO_RP2040
-    return PICO_FLASH_SIZE_BYTES - 16*1024;
+    // TODO: should really check the proginfo but I don't care enough
+    return PICO_FLASH_SIZE_BYTES - 4 * FLASH_SECTOR_SIZE;
 #else
-    // TODO: actually check the flash size instead of restricting ourselves to one 4MB window
-    // only matters for third-party RP2350 boards
-    return (qmi_hw->atrans[0] >> QMI_ATRANS0_SIZE_LSB) * FLASH_SECTOR_SIZE;
+    uint32_t offset = ((qmi_hw->atrans[0] & QMI_ATRANS0_BASE_BITS) >> QMI_ATRANS0_BASE_LSB) * FLASH_SECTOR_SIZE;
+    return PICO_FLASH_SIZE_BYTES - offset;
 #endif
 }
